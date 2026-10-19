@@ -1,0 +1,735 @@
+// Bhalojob database schema (PostgreSQL 18).
+//
+// Models use camelCase in TypeScript and map to the snake_case tables and
+// columns in the database (@map / @@map). Change the structure here, then run
+// `npm run db:migrate` to write and apply a migration.
+//
+// Not expressible in this file, so kept in the migration SQL only:
+//   * CHECK constraints (no negative salaries, ssw_test only on 特定技能, …)
+//   * the set_updated_at() trigger on every table with updated_at
+//   * the member number sequences used by Individual / Corporation memberNo
+// When a later migration touches those tables, keep them by hand.
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =============================================================================
+// 1. Login
+// =============================================================================
+
+enum AccountType {
+  individual
+  corporate
+  staff
+
+  @@map("account_type")
+}
+
+/// One row per login (ログインマスタ + ユーザマスタ). Passwords live in the auth library's tables.
+model User {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String      @unique @db.VarChar(254)
+  emailVerified Boolean     @default(false) @map("email_verified")
+  name          String?     @db.VarChar(80)
+  accountType   AccountType @map("account_type")
+  isActive      Boolean     @default(true) @map("is_active")
+  lastLoginAt   DateTime?   @map("last_login_at") @db.Timestamptz(6)
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  staffProfile     StaffProfile?
+  staffCredential  StaffCredential?
+  staffSessions    StaffSession[]
+  memberCredential MemberCredential?
+  memberSessions   MemberSession[]
+  uploadedFiles    UploadedFile[]
+  individual       Individual?
+  corporation      Corporation?
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+/// Candidate / employer password (scrypt hash), same scheme as StaffCredential.
+model MemberCredential {
+  userId       String   @id @map("user_id") @db.Uuid
+  passwordHash String   @map("password_hash") @db.VarChar(300)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("member_credentials")
+}
+
+/// Member sign-in (cookie `bj_member`). The browser holds a random token; only its SHA-256 is stored.
+model MemberSession {
+  id        BigInt   @id @default(autoincrement())
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @unique @map("token_hash") @db.Char(64)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  userAgent String?  @map("user_agent") @db.VarChar(300)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("member_sessions")
+}
+
+/// Staff review of something a member submitted (審査).
+enum ReviewStatus {
+  pending
+  approved
+  rejected
+
+  @@map("review_status")
+}
+
+enum FileKind {
+  resume
+  photo
+  logo
+
+  @@map("file_kind")
+}
+
+/// A file a member uploaded. The bytes live in file storage (local disk now, S3 later) under storageKey.
+model UploadedFile {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerUserId  String   @map("owner_user_id") @db.Uuid
+  kind         FileKind
+  originalName String   @map("original_name") @db.VarChar(255)
+  contentType  String   @map("content_type") @db.VarChar(100)
+  sizeBytes    Int      @map("size_bytes")
+  storageKey   String   @unique @map("storage_key") @db.VarChar(300)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  owner    User         @relation(fields: [ownerUserId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  resumeOf Individual[] @relation("IndividualResumeFile")
+  photoOf  Individual[] @relation("IndividualPhotoFile")
+
+  @@index([ownerUserId])
+  @@map("uploaded_files")
+}
+
+/// Staff password (scrypt hash, never plain text). Member passwords will live in the auth library's tables.
+model StaffCredential {
+  userId       String   @id @map("user_id") @db.Uuid
+  passwordHash String   @map("password_hash") @db.VarChar(300)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("staff_credentials")
+}
+
+/// Admin console login. The browser cookie holds a random token; only its SHA-256 is stored.
+model StaffSession {
+  id        BigInt   @id @default(autoincrement())
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @unique @map("token_hash") @db.Char(64)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  userAgent String?  @map("user_agent") @db.VarChar(300)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("staff_sessions")
+}
+
+/// Admin console permissions (BHALO810–811). Only for accountType = staff.
+model StaffProfile {
+  userId    String   @id @map("user_id") @db.Uuid
+  isAdmin   Boolean  @default(false) @map("is_admin")
+  canView   Boolean  @default(true) @map("can_view")
+  canEdit   Boolean  @default(false) @map("can_edit")
+  canDelete Boolean  @default(false) @map("can_delete")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("staff_profiles")
+}
+
+// =============================================================================
+// 2. Individual members (個人会員)
+// =============================================================================
+
+enum JobTrack {
+  engineer // 技人国
+  ssw // 特定技能
+  titp // 技能実習
+
+  @@map("job_track")
+}
+
+enum SchoolCategory {
+  university
+  vocational
+  language_school
+
+  @@map("school_category")
+}
+
+enum UniversityLevel {
+  undergraduate // 大学
+  graduate // 大学院
+
+  @@map("university_level")
+}
+
+enum SswTestStatus {
+  passed // 合格
+  in_progress // 受験中
+  not_taken // 未受験
+
+  @@map("ssw_test_status")
+}
+
+/// 個人会員情報 (BHALO010–019).
+model Individual {
+  id       BigInt @id @default(autoincrement())
+  userId   String @unique @map("user_id") @db.Uuid
+  /// 10 + YYMM + 6 digits, set by the database. For display only; relations use `id`.
+  memberNo String @unique @default(dbgenerated("(('10'::text || to_char(now(), 'YYMM'::text)) || lpad((nextval('individual_member_seq'::regclass))::text, 6, '0'::text))")) @map("member_no") @db.Char(12)
+
+  // 基本情報 (BHALO010)
+  fullName      String    @map("full_name") @db.VarChar(80)
+  /// フリガナ, printed on the 履歴書.
+  nameKana      String?   @map("name_kana") @db.VarChar(120)
+  gender        String?   @db.VarChar(20)
+  birthDate     DateTime? @map("birth_date") @db.Date
+  hasSpouse     Boolean?  @map("has_spouse")
+  hasChildren   Boolean?  @map("has_children")
+  childrenCount Int?      @map("children_count") @db.SmallInt
+
+  // 住所情報 (BHALO011)
+  residenceCountry String? @map("residence_country") @db.VarChar(80)
+  nationality      String? @db.VarChar(80)
+  nativeLanguage   String? @map("native_language") @db.VarChar(80)
+  mobile           String? @db.VarChar(20)
+  contactEmail     String? @map("contact_email") @db.VarChar(254)
+  postalCode       String? @map("postal_code") @db.VarChar(20)
+  state            String? @db.VarChar(50)
+  city             String? @db.VarChar(50)
+  street           String? @db.VarChar(50)
+  houseNumber      String? @map("house_number") @db.VarChar(20)
+
+  // 画像 / VISA / 自己紹介 / 動画 (BHALO012, 013, 018, 210). Files are in storage; only keys here.
+  photoKey       String?   @map("photo_key") @db.VarChar(300)
+  visaStatus     String?   @map("visa_status") @db.VarChar(40)
+  /// First day of the expiry month.
+  visaExpiry     DateTime? @map("visa_expiry") @db.Date
+  introduction   String?
+  appealVideoKey String?   @map("appeal_video_key") @db.VarChar(300)
+
+  // 求職希望・留学希望 (BHALO019)
+  wantsEngineer       Boolean @default(false) @map("wants_engineer")
+  wantsSsw            Boolean @default(false) @map("wants_ssw")
+  wantsTitp           Boolean @default(false) @map("wants_titp")
+  wantsUniversity     Boolean @default(false) @map("wants_university")
+  wantsVocational     Boolean @default(false) @map("wants_vocational")
+  wantsLanguageSchool Boolean @default(false) @map("wants_language_school")
+
+  // 審査: pending once the candidate submits the wizard; staff approve or reject (BHALO805/806).
+  reviewStatus    ReviewStatus @default(pending) @map("review_status")
+  submittedAt     DateTime?    @map("submitted_at") @db.Timestamptz(6)
+  reviewedAt      DateTime?    @map("reviewed_at") @db.Timestamptz(6)
+  reviewedById    String?      @map("reviewed_by") @db.Uuid
+  rejectionReason String?      @map("rejection_reason") @db.VarChar(500)
+  // Uploaded 履歴書 / 顔写真 (local disk now, S3 later).
+  resumeFileId    String?      @map("resume_file_id") @db.Uuid
+  photoFileId     String?      @map("photo_file_id") @db.Uuid
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user            User                       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  resumeFile      UploadedFile?              @relation("IndividualResumeFile", fields: [resumeFileId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  photoFile       UploadedFile?              @relation("IndividualPhotoFile", fields: [photoFileId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  languages       IndividualLanguage[]
+  educations      IndividualEducation[]
+  workExperiences IndividualWorkExperience[]
+  certifications  IndividualCertification[]
+  preferredAreas  IndividualPreferredArea[]
+  jobWishes       IndividualJobWish[]
+  studyWishes     IndividualStudyWish[]
+  resume          Resume?
+  familyMembers   FamilyMember[]
+  applications    Application[]
+
+  @@index([createdAt(sort: Desc)])
+  @@map("individuals")
+}
+
+/// 言語 (BHALO014)
+model IndividualLanguage {
+  id           BigInt  @id @default(autoincrement())
+  individualId BigInt  @map("individual_id")
+  language     String  @db.VarChar(30)
+  level        String? @db.VarChar(20)
+  sortOrder    Int     @default(0) @map("sort_order") @db.SmallInt
+
+  individual Individual @relation(fields: [individualId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([individualId])
+  @@map("individual_languages")
+}
+
+/// 学歴 (BHALO015). Year + month dates are stored as the 1st of the month.
+model IndividualEducation {
+  id           BigInt    @id @default(autoincrement())
+  individualId BigInt    @map("individual_id")
+  degree       String?   @db.VarChar(80)
+  schoolName   String?   @map("school_name") @db.VarChar(120)
+  enrolledOn   DateTime? @map("enrolled_on") @db.Date
+  graduatedOn  DateTime? @map("graduated_on") @db.Date
+  passedOn     DateTime? @map("passed_on") @db.Date
+  major        String?   @db.VarChar(80)
+  sortOrder    Int       @default(0) @map("sort_order") @db.SmallInt
+
+  individual Individual @relation(fields: [individualId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([individualId])
+  @@map("individual_educations")
+}
+
+/// 実務経験 (BHALO016)
+model IndividualWorkExperience {
+  id           BigInt    @id @default(autoincrement())
+  individualId BigInt    @map("individual_id")
+  companyName  String?   @map("company_name") @db.VarChar(80)
+  industry     String?   @db.VarChar(120)
+  joinedOn     DateTime? @map("joined_on") @db.Date
+  leftOn       DateTime? @map("left_on") @db.Date
+  sortOrder    Int       @default(0) @map("sort_order") @db.SmallInt
+
+  individual Individual @relation(fields: [individualId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([individualId])
+  @@map("individual_work_experiences")
+}
+
+/// 認定資格 (BHALO017)
+model IndividualCertification {
+  id               BigInt    @id @default(autoincrement())
+  individualId     BigInt    @map("individual_id")
+  name             String    @db.VarChar(120)
+  certificateTitle String?   @map("certificate_title") @db.VarChar(120)
+  acquiredOn       DateTime? @map("acquired_on") @db.Date
+  sortOrder        Int       @default(0) @map("sort_order") @db.SmallInt
+
+  individual Individual @relation(fields: [individualId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([individualId])
+  @@map("individual_certifications")
+}
+
+/// 希望地域 (BHALO020)
+model IndividualPreferredArea {
+  id           BigInt  @id @default(autoincrement())
+  individualId BigInt  @map("individual_id")
+  country      String? @db.VarChar(120)
+  region       String? @db.VarChar(120)
+  prefecture   String? @db.VarChar(120)
+  city         String? @db.VarChar(120)
+  freeText     String? @map("free_text") @db.VarChar(300)
+  sortOrder    Int     @default(0) @map("sort_order") @db.SmallInt
+
+  individual Individual @relation(fields: [individualId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([individualId])
+  @@map("individual_preferred_areas")
+}
+
+/// 技人国 / 特定技能 / 技能実習 wishes (BHALO021–023).
+model IndividualJobWish {
+  id            BigInt         @id @default(autoincrement())
+  individualId  BigInt         @map("individual_id")
+  track         JobTrack
+  desiredJob    String?        @map("desired_job") @db.VarChar(120)
+  desiredSalary String?        @map("desired_salary") @db.VarChar(80)
+  yearsOfStay   Int?           @map("years_of_stay") @db.SmallInt
+  /// Only allowed when track = ssw (enforced by a CHECK constraint).
+  sswTest       SswTestStatus? @map("ssw_test")
+  notes         String?        @db.VarChar(300)
+  sortOrder     Int            @default(0) @map("sort_order") @db.SmallInt
+
+  individual Individual @relation(fields: [individualId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([individualId])
+  @@map("individual_job_wishes")
+}
+
+/// 大学・大学院 / 専門学校 / 日本語学校 wishes (BHALO024–026).
+model IndividualStudyWish {
+  id              BigInt           @id @default(autoincrement())
+  individualId    BigInt           @map("individual_id")
+  schoolCategory  SchoolCategory   @map("school_category")
+  /// Only allowed when schoolCategory = university (enforced by a CHECK constraint).
+  universityLevel UniversityLevel? @map("university_level")
+  schoolName      String?          @map("school_name") @db.VarChar(120)
+  faculty         String?          @db.VarChar(120)
+  department      String?          @db.VarChar(120)
+  notes           String?          @db.VarChar(300)
+  sortOrder       Int              @default(0) @map("sort_order") @db.SmallInt
+
+  individual Individual @relation(fields: [individualId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([individualId])
+  @@map("individual_study_wishes")
+}
+
+/// 履歴書 (BHALO201). One per individual.
+model Resume {
+  individualId       BigInt    @id @map("individual_id")
+  heightCm           Decimal?  @map("height_cm") @db.Decimal(4, 1)
+  weightKg           Decimal?  @map("weight_kg") @db.Decimal(4, 1)
+  bloodType          String?   @map("blood_type") @db.VarChar(8)
+  dominantHand       String?   @map("dominant_hand") @db.VarChar(10)
+  eyesightRight      Decimal?  @map("eyesight_right") @db.Decimal(3, 1)
+  eyesightLeft       Decimal?  @map("eyesight_left") @db.Decimal(3, 1)
+  smokes             Boolean?
+  hasTattoo          Boolean?  @map("has_tattoo")
+  tattooLocation     String?   @map("tattoo_location") @db.VarChar(50)
+  /// Store ENCRYPTED by the app, never plain text.
+  passportNo         String?   @map("passport_no") @db.VarChar(100)
+  alcohol            String?   @db.VarChar(60)
+  allergies          String?   @db.VarChar(60)
+  /// 要配慮個人情報 (APPI): needs explicit consent, see sensitiveConsentAt.
+  religion           String?   @db.VarChar(80)
+  strengths          String?   @db.VarChar(200)
+  weaknesses         String?   @db.VarChar(200)
+  motivation         String?   @db.VarChar(300)
+  hobbies            String?   @db.VarChar(200)
+  otherNotes         String?   @map("other_notes") @db.VarChar(300)
+  /// When the candidate agreed to share religion / health data.
+  sensitiveConsentAt DateTime? @map("sensitive_consent_at") @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  individual Individual @relation(fields: [individualId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("resumes")
+}
+
+/// 家族構成 (BHALO202)
+model FamilyMember {
+  id           BigInt    @id @default(autoincrement())
+  individualId BigInt    @map("individual_id")
+  relation     String?   @db.VarChar(50)
+  fullName     String?   @map("full_name") @db.VarChar(80)
+  birthDate    DateTime? @map("birth_date") @db.Date
+  address      String?   @db.VarChar(120)
+  occupation   String?   @db.VarChar(80)
+  sortOrder    Int       @default(0) @map("sort_order") @db.SmallInt
+
+  individual Individual @relation(fields: [individualId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([individualId])
+  @@map("family_members")
+}
+
+// =============================================================================
+// 3. Corporate members (法人会員: companies and schools)
+// =============================================================================
+
+enum CorporationKind {
+  company
+  school
+
+  @@map("corporation_kind")
+}
+
+/// 法人会員情報 (BHALO110–154). A company or a school.
+model Corporation {
+  id       BigInt          @id @default(autoincrement())
+  userId   String          @unique @map("user_id") @db.Uuid
+  /// 20 + YYMM + 6 digits, set by the database. For display only; relations use `id`.
+  memberNo String          @unique @default(dbgenerated("(('20'::text || to_char(now(), 'YYMM'::text)) || lpad((nextval('corporate_member_seq'::regclass))::text, 6, '0'::text))")) @map("member_no") @db.Char(12)
+  kind     CorporationKind
+
+  // 基本情報1 (BHALO111 / 151)
+  name           String  @db.VarChar(120)
+  nameKana       String? @map("name_kana") @db.VarChar(120)
+  founded        String? @db.VarChar(50)
+  representative String  @db.VarChar(80)
+  /// 万円
+  capitalManYen  Int?    @map("capital_man_yen")
+  /// 従業員数・生徒数
+  headcount      Int?
+  industry       String? @db.VarChar(120)
+  url            String? @db.VarChar(200)
+
+  // 基本情報2 (BHALO112 / 152)
+  postalCode    String? @map("postal_code") @db.VarChar(20)
+  prefecture    String? @db.VarChar(50)
+  city          String? @db.VarChar(50)
+  town          String? @db.VarChar(50)
+  addressLine   String? @map("address_line") @db.VarChar(50)
+  contactPerson String? @map("contact_person") @db.VarChar(80)
+  phone         String? @db.VarChar(20)
+  contactEmail  String? @map("contact_email") @db.VarChar(254)
+
+  // ロゴ / 紹介文 (BHALO113–114 / 153–154)
+  logoKey      String? @map("logo_key") @db.VarChar(300)
+  introduction String?
+
+  // 対象選択 (BHALO110). At least one must be true (CHECK constraint).
+  isCompany              Boolean @default(false) @map("is_company")
+  /// 監理団体
+  isSupervisingOrg       Boolean @default(false) @map("is_supervising_org")
+  /// 登録支援機関
+  isRegisteredSupportOrg Boolean @default(false) @map("is_registered_support_org")
+  isUniversity           Boolean @default(false) @map("is_university")
+  isVocationalSchool     Boolean @default(false) @map("is_vocational_school")
+  isLanguageSchool       Boolean @default(false) @map("is_language_school")
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  jobPostings  JobPosting[]
+  recruitments Recruitment[]
+
+  @@index([kind, createdAt(sort: Desc)])
+  @@map("corporations")
+}
+
+/// 求人情報 (BHALO116)
+model JobPosting {
+  id              BigInt       @id @default(autoincrement())
+  corporationId   BigInt       @map("corporation_id")
+  /// 1, 2, 3 … within the company.
+  jobNo           Int          @map("job_no")
+  track           JobTrack
+  industry        String?      @db.VarChar(120)
+  jobType         String?      @map("job_type") @db.VarChar(120)
+  workName        String?      @map("work_name") @db.VarChar(120)
+  employmentType  String?      @map("employment_type") @db.VarChar(120)
+  description     String?      @db.VarChar(1000)
+  location        String?      @db.VarChar(120)
+  hoursFrom       DateTime?    @map("hours_from") @db.Time(6)
+  hoursTo         DateTime?    @map("hours_to") @db.Time(6)
+  holidays        String?      @db.VarChar(120)
+  /// 円/月
+  monthlySalary   Int?         @map("monthly_salary")
+  contactPerson   String?      @map("contact_person") @db.VarChar(80)
+  contactEmail    String?      @map("contact_email") @db.VarChar(254)
+  /// 会社の特長
+  features        String?      @db.VarChar(1000)
+  // 審査: a job is public only when approved (and active). Employer edits re-submit it.
+  reviewStatus    ReviewStatus @default(pending) @map("review_status")
+  submittedAt     DateTime?    @map("submitted_at") @db.Timestamptz(6)
+  reviewedAt      DateTime?    @map("reviewed_at") @db.Timestamptz(6)
+  reviewedById    String?      @map("reviewed_by") @db.Uuid
+  rejectionReason String?      @map("rejection_reason") @db.VarChar(500)
+  isActive        Boolean      @default(true) @map("is_active")
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  corporation      Corporation       @relation(fields: [corporationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  jobOrder         JobOrder?
+  applicationItems ApplicationItem[]
+  applications     Application[]     @relation("ApplicationJob")
+
+  @@unique([corporationId, jobNo])
+  @@index([track, industry], where: raw("is_active"))
+  @@index([reviewStatus, createdAt(sort: Desc)])
+  @@map("job_postings")
+}
+
+/// 求人票 (BHALO117). One per job posting.
+model JobOrder {
+  jobPostingId            BigInt    @id @map("job_posting_id")
+  /// 1日の労働時間 (hh:mm)
+  dailyWorkingTime        DateTime? @map("daily_working_time") @db.Time(6)
+  overtimeDailyHours      Int?      @map("overtime_daily_hours") @db.SmallInt
+  overtimeMonthlyAvgHours Int?      @map("overtime_monthly_avg_hours") @db.SmallInt
+  breakTime               String?   @map("break_time") @db.VarChar(120)
+  avgWorkDaysPerMonth     Int?      @map("avg_work_days_per_month") @db.SmallInt
+  annualWorkHours         Int?      @map("annual_work_hours") @db.SmallInt
+  weeklyWorkDays          String?   @map("weekly_work_days") @db.VarChar(120)
+  /// 雇用保険
+  hasEmploymentInsurance  Boolean   @default(false) @map("has_employment_insurance")
+  /// 労災保険
+  hasWorkersComp          Boolean   @default(false) @map("has_workers_comp")
+  /// 健康保険
+  hasHealthInsurance      Boolean   @default(false) @map("has_health_insurance")
+  /// 厚生年金
+  hasPension              Boolean   @default(false) @map("has_pension")
+  /// 通勤手当 全額支給
+  commuteFull             Boolean   @default(false) @map("commute_full")
+  /// 通勤手当 一律
+  commuteFixed            Boolean   @default(false) @map("commute_fixed")
+  japaneseLevel           String?   @map("japanese_level") @db.VarChar(120)
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("job_orders")
+}
+
+/// 生徒募集情報 (BHALO156)
+model Recruitment {
+  id            BigInt   @id @default(autoincrement())
+  corporationId BigInt   @map("corporation_id")
+  recruitmentNo Int      @map("recruitment_no")
+  faculty       String?  @db.VarChar(120)
+  department    String?  @db.VarChar(120)
+  /// 共学 / 男子校 / 女子校
+  schoolGender  String?  @map("school_gender") @db.VarChar(20)
+  location      String?  @db.VarChar(120)
+  capacity      Int?
+  /// 円/年
+  annualTuition Int?     @map("annual_tuition")
+  contactPerson String?  @map("contact_person") @db.VarChar(80)
+  contactEmail  String?  @map("contact_email") @db.VarChar(254)
+  notes         String?  @db.VarChar(300)
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  corporation      Corporation       @relation(fields: [corporationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  applicationItems ApplicationItem[]
+
+  @@unique([corporationId, recruitmentNo])
+  @@index([corporationId], where: raw("is_active"))
+  @@map("recruitments")
+}
+
+// =============================================================================
+// 4. Contact requests (コンタクト申込, BHALO200)
+// =============================================================================
+
+enum ApplicationStatus {
+  new
+  in_progress
+  closed
+
+  @@map("application_status")
+}
+
+model Application {
+  id              BigInt            @id @default(autoincrement())
+  individualId    BigInt            @map("individual_id")
+  /// The job applied to (MVP: one application = one job). Null for legacy multi-item contact requests.
+  jobPostingId    BigInt?           @map("job_posting_id")
+  status          ApplicationStatus @default(new)
+  staffNote       String?           @map("staff_note")
+  // 審査: the employer sees an application only once staff approve it.
+  reviewStatus    ReviewStatus      @default(pending) @map("review_status")
+  submittedAt     DateTime?         @map("submitted_at") @db.Timestamptz(6)
+  reviewedAt      DateTime?         @map("reviewed_at") @db.Timestamptz(6)
+  reviewedById    String?           @map("reviewed_by") @db.Uuid
+  rejectionReason String?           @map("rejection_reason") @db.VarChar(500)
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  individual Individual        @relation(fields: [individualId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  jobPosting JobPosting?       @relation("ApplicationJob", fields: [jobPostingId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  items      ApplicationItem[]
+
+  // One application per candidate per job (NULLs never collide in PostgreSQL).
+  @@unique([individualId, jobPostingId])
+  @@index([individualId])
+  @@index([jobPostingId, reviewStatus])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([reviewStatus, createdAt(sort: Desc)])
+  @@map("applications")
+}
+
+/// Points at one job posting OR one recruitment (CHECK constraint), or at
+/// nothing once that posting is deleted.
+model ApplicationItem {
+  id            BigInt  @id @default(autoincrement())
+  applicationId BigInt  @map("application_id")
+  jobPostingId  BigInt? @map("job_posting_id")
+  recruitmentId BigInt? @map("recruitment_id")
+  /// Snapshot, so the request still makes sense after the posting is deleted.
+  targetLabel   String  @map("target_label") @db.VarChar(300)
+
+  application Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  jobPosting  JobPosting?  @relation(fields: [jobPostingId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  recruitment Recruitment? @relation(fields: [recruitmentId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([applicationId])
+  @@index([jobPostingId])
+  @@index([recruitmentId])
+  @@map("application_items")
+}
+
+// =============================================================================
+// 5. Master data and settings
+// =============================================================================
+
+/// 選択項目マスタ (BHALO812). Two levels via parentId (業種 → 職種, 日本語 → N1–N5, 学部 → 学科).
+model SelectionOption {
+  id        BigInt  @id @default(autoincrement())
+  /// e.g. 'industry', 'visa', 'country'
+  category  String  @db.VarChar(40)
+  parentId  BigInt? @map("parent_id")
+  labelJa   String  @map("label_ja") @db.VarChar(120)
+  labelEn   String? @map("label_en") @db.VarChar(120)
+  labelBn   String? @map("label_bn") @db.VarChar(120)
+  sortOrder Int     @default(0) @map("sort_order") @db.SmallInt
+  isActive  Boolean @default(true) @map("is_active")
+
+  parent   SelectionOption?  @relation("SelectionOptionTree", fields: [parentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  children SelectionOption[] @relation("SelectionOptionTree")
+
+  @@index([category, parentId, sortOrder])
+  @@map("selection_options")
+}
+
+/// 人気業種 (BHALO815)
+model PopularIndustry {
+  id        BigInt  @id @default(autoincrement())
+  labelJa   String  @map("label_ja") @db.VarChar(60)
+  labelEn   String? @map("label_en") @db.VarChar(120)
+  sortOrder Int     @default(0) @map("sort_order") @db.SmallInt
+
+  @@map("popular_industries")
+}
+
+/// 管理マスタ (BHALO816): key/value settings such as where contact requests are emailed.
+model SiteSetting {
+  key       String   @id @db.VarChar(80)
+  value     String
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("site_settings")
+}
+
+/// Which staff member viewed or changed which record (personal data under APPI).
+model AuditLog {
+  id          BigInt   @id @default(autoincrement())
+  staffUserId String?  @map("staff_user_id") @db.Uuid
+  /// 'view', 'create', 'update', 'delete'
+  action      String   @db.VarChar(40)
+  targetTable String   @map("target_table") @db.VarChar(60)
+  targetId    String   @map("target_id") @db.VarChar(40)
+  details     Json?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  staffUser User? @relation(fields: [staffUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([targetTable, targetId])
+  @@map("audit_logs")
+}
