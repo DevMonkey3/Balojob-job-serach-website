@@ -112,8 +112,18 @@ export function MyPage({ name, saved, status, resume, applications, appliedJobId
 
 export function MyPageSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <div className="h-96 animate-pulse rounded-xl bg-muted" aria-busy="true" />
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10" aria-busy="true">
+      <div className="flex flex-col gap-2">
+        <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+        <div className="h-8 w-64 animate-pulse rounded bg-muted" />
+        <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="h-52 animate-pulse rounded-xl bg-muted" />
+        <div className="h-52 animate-pulse rounded-xl bg-muted" />
+      </div>
+      <div className="h-32 animate-pulse rounded-xl bg-muted" />
+      <div className="h-96 animate-pulse rounded-xl bg-muted" />
     </div>
   );
 }

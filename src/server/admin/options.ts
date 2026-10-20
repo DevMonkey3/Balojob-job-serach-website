@@ -1,9 +1,11 @@
 import "server-only";
+import { cacheLife, cacheTag } from "next/cache";
 import { db } from "@/server/db";
 
 // 選択項目マスタ (selection_options) for admin forms. The specs say each screen
 // loads its dropdowns from the master, so admin forms read the database here
 // rather than src/lib/options.ts. Values are stored as the Japanese label.
+// The label lists are cached (tag "options"); saveOptionsAction refreshes them.
 
 export type OptionNode = {
   id: string;
@@ -17,6 +19,9 @@ export type OptionNode = {
 
 /** Active level-1 labels of one category, in display order. */
 export async function getOptionLabels(category: string): Promise<string[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("options");
   const rows = await db.selectionOption.findMany({
     where: { category, parentId: null, isActive: true },
     orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
@@ -27,6 +32,9 @@ export async function getOptionLabels(category: string): Promise<string[]> {
 
 /** Active level-2 labels of a category (e.g. all 職種 under every 業種). */
 export async function getChildOptionLabels(category: string): Promise<string[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("options");
   const rows = await db.selectionOption.findMany({
     where: { category, parentId: { not: null }, isActive: true },
     orderBy: [{ parentId: "asc" }, { sortOrder: "asc" }, { id: "asc" }],

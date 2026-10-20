@@ -66,6 +66,16 @@ See **[docs/database-guide.md](docs/database-guide.md)** for setup and for chang
 
 Pages read the database at request time, never during `next build`, so the build doesn't need the database or its password. Public listings are cached for a few minutes (`"use cache"`, tag `listings`).
 
+## Running on a small server (1 vCPU, 1–2 GB)
+
+The site is built to stay quick on a cheap VPS: every page has a static shell (Partial Prerendering) and only the signed-in parts stream from the database; the system font stack means no font downloads; public listings and dropdown labels are cached in memory and refreshed when staff change them (`updateTag`); the connection pool is bounded (`DATABASE_POOL_MAX`, default 5) with a 15-second statement timeout; every list screen has an index.
+
+1. Build once (`NEXT_BUILD_CPUS=2 npm run build`). `next.config.ts` sets `output: "standalone"`, so `.next/standalone` holds a self-contained server. Copy it to the server together with `.next/static` (into `.next/standalone/.next/static`) and `public/`.
+2. Run `node server.js` from that folder with `NODE_ENV=production`, `PORT`, `DATABASE_URL`, `APP_ENCRYPTION_KEY` (and `STORAGE_DIR` if uploads should live elsewhere). On a 1 GB box add `NODE_OPTIONS=--max-old-space-size=512`. One process is enough; let systemd restart it (`Restart=always`).
+3. Put Caddy or nginx in front for TLS, HTTP/2 and brotli/gzip. `/_next/static/*` is already served with a one-year immutable cache header.
+4. PostgreSQL on the same box: `shared_buffers = 256MB`, `work_mem = 8MB`, `max_connections = 20` is plenty — the app never opens more than `DATABASE_POOL_MAX` connections.
+5. Back up `storage/` (uploaded résumés) and the database. Moving uploads to S3 is a one-file change in `src/server/storage.ts`.
+
 ## Code layout
 
 ```

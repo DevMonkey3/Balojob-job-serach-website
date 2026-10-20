@@ -273,6 +273,8 @@ model Individual {
   applications    Application[]
 
   @@index([createdAt(sort: Desc)])
+  /// Review queue and the 審査 filter on 会員一覧 (pending = submitted, not yet reviewed).
+  @@index([reviewStatus, submittedAt])
   @@map("individuals")
 }
 

@@ -2,6 +2,7 @@
 
 import { startTransition, useActionState } from "react";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { TextField } from "@/components/admin/fields";
 import { FormErrorsContext } from "@/components/admin/form-context";
@@ -107,7 +108,14 @@ export function AccountForm({ kind }: { kind: "individual" | "corporate" }) {
               ※ メール認証は今後追加予定です (Email verification will be added)
             </p>
             <Button type="submit" size="lg" disabled={pending}>
-              {pending ? "送信中…" : "登録して次へ (Continue)"}
+              {pending ? (
+                <>
+                  <Spinner />
+                  送信中…
+                </>
+              ) : (
+                "登録して次へ (Continue)"
+              )}
             </Button>
           </form>
         </FormErrorsContext>

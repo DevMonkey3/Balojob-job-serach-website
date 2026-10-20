@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 export type NavItem = { label: string; href: string; screenId: string };
 export type NavGroup = { title: string; items: NavItem[] };
 
-/** Sidebar menu. The deepest matching href is the active one. */
-export function AdminNav({ groups }: { groups: NavGroup[] }) {
+/** Sidebar menu. The deepest matching href is the active one. `onNavigate` lets the mobile sheet close itself. */
+export function AdminNav({ groups, onNavigate }: { groups: NavGroup[]; onNavigate?: () => void }) {
   const pathname = usePathname();
   const active = groups
     .flatMap((g) => g.items)
@@ -19,6 +19,7 @@ export function AdminNav({ groups }: { groups: NavGroup[] }) {
     <>
       <Link
         href="/admin"
+        onClick={onNavigate}
         className={cn(
           "mb-4 block rounded-md px-3 py-2 text-sm font-semibold",
           pathname === "/admin" ? "bg-primary/10 text-primary" : "hover:bg-muted",
@@ -34,6 +35,7 @@ export function AdminNav({ groups }: { groups: NavGroup[] }) {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  onClick={onNavigate}
                   title={item.screenId}
                   aria-current={active?.href === item.href ? "page" : undefined}
                   className={cn(

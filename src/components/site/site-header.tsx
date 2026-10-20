@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { HeaderAuth } from "@/components/site/header-auth";
 import { Logo } from "@/components/site/logo";
+import { MobileNav } from "@/components/site/mobile-nav";
 
 // The register / My Page buttons stay visible while scrolling (サイトマップ).
 // They depend on the session cookie, so they stream in behind a placeholder.
@@ -26,6 +27,7 @@ export function SiteHeader() {
           <Suspense fallback={<span className="h-9 w-44 animate-pulse rounded-lg bg-muted" />}>
             <HeaderAuth />
           </Suspense>
+          <MobileNav />
         </div>
       </div>
     </header>

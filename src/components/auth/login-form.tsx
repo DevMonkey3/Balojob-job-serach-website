@@ -3,6 +3,7 @@
 import { startTransition, useActionState } from "react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { TextField } from "@/components/admin/fields";
 import { FormErrorsContext } from "@/components/admin/form-context";
@@ -60,7 +61,14 @@ export function LoginForm({ next }: { next?: string }) {
               </p>
             )}
             <Button type="submit" size="lg" disabled={pending}>
-              {pending ? "送信中…" : "ログイン"}
+              {pending ? (
+                <>
+                  <Spinner />
+                  送信中…
+                </>
+              ) : (
+                "ログイン"
+              )}
             </Button>
           </form>
         </FormErrorsContext>

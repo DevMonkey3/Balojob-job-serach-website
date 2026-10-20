@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Spinner } from "@/components/ui/spinner";
 import { FieldInput } from "@/components/wizard/field-input";
 import { useWizard } from "@/components/wizard/wizard-provider";
 import { activeSteps, flows, nextStep, prevStep, stepHref, type FlowId } from "@/lib/flows";
@@ -23,8 +24,31 @@ export function StepView({ flowId, slug }: { flowId: FlowId; slug: string }) {
   return <StepForm key={slug} flowId={flowId} step={step} />;
 }
 
+/** Shaped like a step (progress line, card with six fields, two buttons) so the page doesn't jump. */
 export function StepSkeleton() {
-  return <div className="h-96 animate-pulse rounded-xl bg-muted" aria-busy="true" />;
+  return (
+    <div className="flex flex-col gap-6" aria-busy="true">
+      <div className="flex flex-col gap-2">
+        <div className="h-4 w-48 animate-pulse rounded bg-muted" />
+        <div className="h-2 w-full animate-pulse rounded-full bg-muted" />
+      </div>
+      <div className="rounded-xl border bg-card p-6">
+        <div className="mb-6 h-6 w-56 animate-pulse rounded bg-muted" />
+        <div className="grid gap-5 sm:grid-cols-2">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <div className="h-3.5 w-24 animate-pulse rounded bg-muted" />
+              <div className="h-8 w-full animate-pulse rounded-lg bg-muted" />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex justify-between">
+        <div className="h-9 w-28 animate-pulse rounded-lg bg-muted" />
+        <div className="h-9 w-28 animate-pulse rounded-lg bg-muted" />
+      </div>
+    </div>
+  );
 }
 
 const isFilled = (row: Row) => Object.values(row).some((v) => typeof v === "string" && v.trim() !== "");
@@ -56,6 +80,13 @@ function StepForm({ flowId, step }: { flowId: FlowId; step: StepDef }) {
   const prev = prevStep(flow, step.slug, draft);
   const next = nextStep(flow, step.slug, draft);
   const backHref = prev ? stepHref(flow, prev.slug) : persists ? flow.finishHref : flow.startHref;
+
+  // Warm the next and previous steps so moving between them feels instant.
+  const nextHref = next ? stepHref(flow, next.slug) : null;
+  useEffect(() => {
+    if (nextHref) router.prefetch(nextHref);
+    router.prefetch(backHref);
+  }, [router, nextHref, backHref]);
 
   // Empty rows are dropped, matching the spec's "空行以外の行で登録". `kept` maps
   // the saved row index (what the server reports errors for) back to the editor.
@@ -173,7 +204,16 @@ function StepForm({ flowId, step }: { flowId: FlowId; step: StepDef }) {
           もどる (Back)
         </Button>
         <Button type="submit" size="lg" disabled={pending}>
-          {pending ? "保存中…" : next ? "次へ (Next)" : flow.finishLabel}
+          {pending ? (
+            <>
+              <Spinner />
+              保存中…
+            </>
+          ) : next ? (
+            "次へ (Next)"
+          ) : (
+            flow.finishLabel
+          )}
         </Button>
       </div>
     </form>

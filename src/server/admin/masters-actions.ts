@@ -107,6 +107,8 @@ export async function saveOptionsAction(_prev: ActionState, formData: FormData):
   const result = await saveOptionRows(category, parentId, parsed.rows);
   if (!result) return { message: STALE };
   await audit(staff.id, "update", "selection_options", parentId ?? category, { category, parentId: rawParentId ?? null, ...result });
+  // Dropdown labels are cached (src/server/admin/options.ts).
+  updateTag("options");
 
   const q = new URLSearchParams({ category });
   if (rawParentId) q.set("parent", rawParentId);

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { SendIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { applyAction } from "@/server/member/candidate-actions";
 import type { ActionState } from "@/server/admin/form";
 
@@ -23,7 +24,7 @@ export function ApplyButton({ jobId, applied }: { jobId: string; applied: boolea
         <form action={formAction}>
           <input type="hidden" name="jobId" value={jobId} />
           <Button type="submit" size="sm" disabled={pending}>
-            <SendIcon />
+            {pending ? <Spinner /> : <SendIcon />}
             {pending ? "送信中…" : "応募する"}
           </Button>
         </form>

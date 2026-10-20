@@ -21,7 +21,10 @@ export const ALLOWED_TYPES: Record<FileKind, Record<string, string>> = {
   logo: { "image/jpeg": "jpg", "image/png": "png" },
 };
 
-const LOCAL_ROOT = path.resolve(process.cwd(), process.env.STORAGE_DIR ?? "storage");
+// Resolved when first used, relative to the working directory. (Not
+// `path.resolve(process.cwd(), …)` at module level: the standalone build's
+// file tracer then copies the whole project folder, uploads included.)
+const localRoot = () => path.resolve(process.env.STORAGE_DIR ?? "storage");
 
 interface StorageDriver {
   put(key: string, bytes: Uint8Array): Promise<void>;
@@ -31,12 +34,12 @@ interface StorageDriver {
 
 const localDriver: StorageDriver = {
   async put(key, bytes) {
-    const file = path.join(LOCAL_ROOT, key);
+    const file = path.join(localRoot(), key);
     await mkdir(path.dirname(file), { recursive: true });
     await writeFile(file, bytes);
   },
   async stream(key) {
-    const file = path.join(LOCAL_ROOT, key);
+    const file = path.join(localRoot(), key);
     try {
       await stat(file);
     } catch {
@@ -45,7 +48,7 @@ const localDriver: StorageDriver = {
     return Readable.toWeb(createReadStream(file)) as ReadableStream<Uint8Array>;
   },
   async remove(key) {
-    await unlink(path.join(LOCAL_ROOT, key)).catch(() => undefined);
+    await unlink(path.join(localRoot(), key)).catch(() => undefined);
   },
 };
 

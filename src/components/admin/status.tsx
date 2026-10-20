@@ -34,8 +34,27 @@ export function EmptyRow({ colSpan }: { colSpan: number }) {
   );
 }
 
+/** Title line plus a table outline, so list pages don't jump when the rows arrive. */
 export function TableSkeleton() {
-  return <div className="h-80 animate-pulse rounded-xl bg-muted" aria-busy="true" />;
+  return (
+    <div className="flex flex-col gap-6" aria-busy="true">
+      <div className="flex flex-col gap-2">
+        <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+        <div className="h-8 w-56 animate-pulse rounded bg-muted" />
+      </div>
+      <div className="overflow-hidden rounded-xl border bg-background">
+        <div className="h-10 border-b bg-muted/50" />
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i} className="flex items-center gap-4 border-b px-4 py-3 last:border-b-0">
+            <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+            <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+            <div className="h-4 flex-1 animate-pulse rounded bg-muted" />
+            <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export { Table };

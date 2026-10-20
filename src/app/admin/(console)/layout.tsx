@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/site/logo";
+import { AdminMobileNav } from "@/components/admin/mobile-nav";
 import { AdminNav, type NavGroup } from "@/components/admin/nav";
 import { requireStaff, type Staff } from "@/server/auth/staff";
 import { logoutStaffAction } from "@/server/auth/staff-actions";
@@ -82,8 +83,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-screen flex-col bg-muted/30">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-t-4 border-t-brand-orange bg-background px-4">
+        <Suspense fallback={null}>
+          <MobileSidebar />
+        </Suspense>
         <Logo href="/admin" />
-        <Badge variant="outline">管理画面</Badge>
+        <Badge variant="outline" className="hidden sm:inline-flex">
+          管理画面
+        </Badge>
         <form action="/admin/search" method="get" className="relative ml-auto hidden w-72 md:block">
           <SearchIcon className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input name="q" placeholder="クイック検索（会員番号・氏名・法人名）" className="pl-8" aria-label="クイック検索" />
@@ -124,4 +130,9 @@ async function StaffMenu() {
 async function Sidebar() {
   const staff = await requireStaff();
   return <AdminNav groups={navGroups(staff)} />;
+}
+
+async function MobileSidebar() {
+  const staff = await requireStaff();
+  return <AdminMobileNav groups={navGroups(staff)} />;
 }

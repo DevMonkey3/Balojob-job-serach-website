@@ -158,16 +158,23 @@ function TrackCards({ counts }: { counts?: Record<JobTrackLabel, number> }) {
   return (
     <div className="grid gap-4 md:grid-cols-3">
       {tracks.map((t) => (
-        <Card key={t.ja}>
-          <CardHeader>
-            <CardTitle className="text-xl">{t.ja}</CardTitle>
-            <CardDescription>{t.en}</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3 text-sm">
-            <p>{t.body}</p>
-            <p className="text-muted-foreground">掲載中の求人：{counts?.[t.ja] ?? "…"}件</p>
-          </CardContent>
-        </Card>
+        <Link key={t.ja} href="/mypage" className="group rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+          <Card className="h-full transition-colors group-hover:border-primary/40 group-hover:bg-primary/5">
+            <CardHeader>
+              <CardTitle className="text-xl">{t.ja}</CardTitle>
+              <CardDescription>{t.en}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3 text-sm">
+              <p>{t.body}</p>
+              <p className="flex items-center justify-between text-muted-foreground">
+                <span>
+                  掲載中の求人：<span className="font-semibold tabular-nums text-foreground">{counts?.[t.ja] ?? "…"}</span>件
+                </span>
+                <span className="text-primary">求人を見る →</span>
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
       ))}
     </div>
   );

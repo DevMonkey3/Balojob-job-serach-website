@@ -16,7 +16,18 @@ function createClient(connectionString: string | undefined) {
   // A local PostgreSQL on a Japanese PC defaults to Asia/Tokyo, which shifted
   // every app-written timestamp by nine hours; this pins it regardless of the
   // server's setting (Aurora is UTC already).
-  const adapter = new PrismaPg({ connectionString, options: "-c TimeZone=UTC" });
+  const adapter = new PrismaPg({
+    connectionString,
+    // A small, bounded pool. One or two vCPUs serve a handful of queries at a
+    // time; extra connections would only wait inside PostgreSQL and use its
+    // memory. DATABASE_POOL_MAX raises it on bigger machines (RDS Proxy later).
+    max: Number(process.env.DATABASE_POOL_MAX) || 5,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
+    // UTC session (see above), plus a ceiling so one runaway query can't hold
+    // a connection for long.
+    options: "-c TimeZone=UTC -c statement_timeout=15000",
+  });
   return new PrismaClient({
     adapter,
     log: isProduction ? ["error"] : ["warn", "error"],

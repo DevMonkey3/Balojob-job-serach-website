@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogClose,
@@ -104,7 +105,14 @@ export function FormShell({
 
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" size="lg" disabled={pending}>
-            {pending ? "保存中…" : submitLabel}
+            {pending ? (
+              <>
+                <Spinner />
+                保存中…
+              </>
+            ) : (
+              submitLabel
+            )}
           </Button>
           {cancelHref && (
             <Link href={cancelHref} className={buttonVariants({ variant: "outline", size: "lg" })}>
