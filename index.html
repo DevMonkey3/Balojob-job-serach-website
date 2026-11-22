@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bhalojob バロジョブ | デモ版</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23F26A1B%22/%3E%3Cstop offset=%221%22 stop-color=%22%23D9261C%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22url(%23g)%22/%3E%3Cpath fill=%22%23fff%22 fill-rule=%22evenodd%22 d=%22M15 10h17c10 0 16 5 16 13 0 5-3 8.5-7 10 5 1.5 9 5.5 9 11 0 8-7 13-17 13H15Zm10 8v11h7c4 0 7-2 7-5.5S36 18 32 18Zm0 19v12h8c5 0 8-2.5 8-6s-3-6-8-6Z%22/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#fff; --fg:#171717; --muted:#faf6f1; --muted-fg:#737373; --border:#eee4d9; --input:#e4d8cb;
+  --primary:#c2410c; --orange:#ea580c; --red:#dc2626; --secondary:#fff3e4; --secondary-fg:#8a3a12;
+  --green:#15803d; --green-bg:#e8f6ec; --amber:#a16207; --amber-bg:#fdf3d3; --red-bg:#fde8e8; --grey-bg:#f1f1f1;
+}
+*{box-sizing:border-box}
+html{font-family:system-ui,-apple-system,"Segoe UI","Hiragino Sans","Yu Gothic UI",Meiryo,"Noto Sans JP",sans-serif;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-size:15px;line-height:1.6}
+#app{min-height:100vh;display:flex;flex-direction:column}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.5}
+.wrap{max-width:1152px;margin:0 auto;padding:0 16px;width:100%}
+.muted{color:var(--muted-fg)}
+.small{font-size:13px}.xs{font-size:12px}
+.mono{font-family:ui-monospace,Consolas,Menlo,monospace;font-size:12px;color:var(--muted-fg)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.col{display:flex;flex-direction:column;gap:12px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.span2{grid-column:span 2}
+@media(max-width:800px){.g2,.g3,.g5{grid-template-columns:1fr}.span2{grid-column:auto}.hide-sm{display:none!important}}
+.demobar{background:#1f1f1f;color:#fff;font-size:12px}
+.demobar .wrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:6px;padding-bottom:6px;max-width:none}
+.demobar b{color:#ffb37a}
+.demobar button{background:#333;border:1px solid #555;color:#fff;border-radius:6px;padding:3px 9px;font-size:12px}
+.demobar button:hover{background:#444}
+.demobar .sp{flex:1}
+.header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.95);border-bottom:1px solid var(--border)}
+.header .bar{height:4px;background:linear-gradient(90deg,var(--orange),var(--red))}
+.header .inner{height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{display:flex;align-items:baseline;gap:8px}
+.logo b{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.logo .o{color:var(--orange)}.logo .r{color:var(--red)}
+.nav{display:flex;gap:24px;font-size:14px}
+.nav a:hover{color:var(--primary)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid transparent;background:var(--primary);color:#fff;padding:7px 14px;font-size:14px;font-weight:500;white-space:nowrap;transition:background .15s}
+.btn:hover:not(:disabled){background:#a8370a}
+.btn.outline{background:#fff;color:var(--fg);border-color:var(--input)}
+.btn.outline:hover:not(:disabled){background:var(--muted)}
+.btn.ghost{background:transparent;color:var(--fg)}
+.btn.ghost:hover:not(:disabled){background:var(--muted)}
+.btn.secondary{background:var(--secondary);color:var(--secondary-fg)}
+.btn.secondary:hover:not(:disabled){background:#ffe8cc}
+.btn.danger{background:#fff;color:var(--red);border-color:#f3c0c0}
+.btn.danger:hover:not(:disabled){background:var(--red-bg)}
+.btn.lg{padding:10px 20px;font-size:15px}
+.btn.sm{padding:4px 10px;font-size:13px}
+.btn.block{width:100%}
+.card{border:1px solid var(--border);border-radius:14px;background:#fff;padding:20px}
+.card h3{font-size:16px}
+a.card{display:block;transition:background .15s,border-color .15s}
+a.card:hover{border-color:#e7b79a;background:#fff8f3}
+.badge{display:inline-flex;align-items:center;border-radius:999px;padding:1px 10px;font-size:12px;font-weight:600;background:var(--primary);color:#fff;white-space:nowrap}
+.badge.sec{background:var(--secondary);color:var(--secondary-fg)}
+.badge.out{background:#fff;color:var(--fg);border:1px solid var(--border);font-weight:500;padding:3px 12px;font-size:13px}
+.badge.ok{background:var(--green-bg);color:var(--green)}
+.badge.wait{background:var(--amber-bg);color:var(--amber)}
+.badge.ng{background:var(--red-bg);color:var(--red)}
+.badge.grey{background:var(--grey-bg);color:#555}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500}
+.f .opts{display:flex;gap:16px;flex-wrap:wrap;font-weight:400;font-size:14px;padding:6px 0}
+.f .opts label{display:flex;gap:6px;align-items:center}
+input[type=text],input[type=email],input[type=password],input[type=tel],input[type=number],input[type=date],input[type=month],select,textarea{width:100%;border:1px solid var(--input);border-radius:8px;padding:8px 10px;background:#fff;font-size:14px}
+input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid rgba(234,88,12,.35);outline-offset:1px}
+.req{color:var(--red)}
+.flash{border-radius:10px;padding:10px 14px;font-size:14px;background:var(--green-bg);color:var(--green);border:1px solid #bfe3c9}
+.flash.ng{background:var(--red-bg);color:var(--red);border-color:#f3c0c0}
+.note{border-radius:10px;padding:10px 14px;font-size:13px;background:var(--secondary);color:var(--secondary-fg)}
+.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted-fg);font-size:12px;padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--muted)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:0}
+a.lnk{color:var(--primary)}a.lnk:hover{text-decoration:underline}
+.empty{padding:28px;text-align:center;color:var(--muted-fg);border:1px solid var(--border);border-radius:12px}
+td.empty{border:0}
+dl.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:14px}
+dl.kv dt{color:var(--muted-fg);white-space:nowrap}dl.kv dd{margin:0;overflow-wrap:anywhere}
+.hero{border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(234,88,12,.15),#fff 50%,rgba(220,38,38,.10))}
+.hero .wrap{display:grid;grid-template-columns:1fr 380px;gap:40px;align-items:center;padding-top:72px;padding-bottom:72px}
+.hero h1{font-size:44px;line-height:1.2;letter-spacing:-.02em}
+@media(max-width:800px){.hero .wrap{grid-template-columns:1fr;padding-top:40px;padding-bottom:40px}.hero h1{font-size:28px}}
+.section{padding:56px 0}
+.section.alt{background:var(--muted);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.stitle{margin-bottom:28px}
+.stitle h2{font-size:24px}
+.step{display:flex;gap:16px;border:1px solid var(--border);border-radius:14px;padding:20px}
+.step .ic{width:40px;height:40px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;background:linear-gradient(135deg,var(--orange),var(--red))}
+.cta{background:linear-gradient(90deg,var(--primary),var(--red));color:#fff}
+.cta .wrap{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;padding-top:56px;padding-bottom:56px}
+.footer{margin-top:auto;border-top:1px solid var(--border);background:var(--muted)}
+.footer .wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;padding-top:40px;padding-bottom:40px;font-size:14px}
+@media(max-width:800px){.footer .wrap{grid-template-columns:1fr}}
+.footer a:hover{color:var(--primary)}
+.page{padding:40px 16px;display:flex;flex-direction:column;gap:28px}
+.narrow{max-width:460px;margin:0 auto;width:100%}
+.mid{max-width:820px;margin:0 auto;width:100%}
+.progress{height:6px;border-radius:99px;background:var(--border);overflow:hidden}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--red))}
+.steps{display:flex;gap:6px;flex-wrap:wrap}
+.steps a{font-size:12px;border:1px solid var(--border);border-radius:99px;padding:2px 10px;color:var(--muted-fg)}
+.steps a.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+.rowbox{border:1px solid var(--border);border-radius:12px;padding:14px;background:var(--muted)}
+.subnav{display:flex;gap:6px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.subnav a{padding:8px 14px;font-size:14px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.subnav a.on{border-color:var(--primary);color:var(--primary);font-weight:600}
+.admin{display:grid;grid-template-columns:230px 1fr;flex:1}
+.side{border-right:1px solid var(--border);background:#fafafa;padding:16px 10px}
+.side a{display:flex;justify-content:space-between;align-items:center;border-radius:7px;padding:6px 12px;font-size:14px;color:#333}
+.side a:hover{background:#efefef}
+.side a.on{background:rgba(194,65,12,.1);color:var(--primary);font-weight:600}
+.side p{font-size:12px;font-weight:600;color:var(--muted-fg);padding:12px 12px 4px}
+.side .n{background:var(--primary);color:#fff;border-radius:99px;font-size:11px;padding:0 7px}
+.amain{padding:28px;display:flex;flex-direction:column;gap:22px;min-width:0;background:#fff}
+.atop{border-bottom:1px solid var(--border);background:#fff}
+.atop .in{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;gap:12px}
+@media(max-width:800px){.admin{grid-template-columns:1fr}.side{display:flex;flex-wrap:wrap;gap:2px;border-right:0;border-bottom:1px solid var(--border)}.side p{display:none}.amain{padding:16px}}
+.tile{display:flex;gap:16px;align-items:center;border:1px solid var(--border);border-radius:14px;padding:20px;background:#fff}
+a.tile:hover{background:var(--muted)}
+.tile.hot{border-color:#e7b79a;background:#fff8f3}
+.tile .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(194,65,12,.1);color:var(--primary);font-weight:700;flex:none}
+.tile.hot .ic{background:var(--primary);color:#fff}
+.tile .num{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:9px;padding:3px;background:#fff}
+.seg button{border:0;background:transparent;border-radius:6px;padding:5px 16px;font-size:14px;font-weight:500}
+.seg button.on{background:var(--primary);color:#fff}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<noscript><p style="padding:24px">このデモを表示するには JavaScript を有効にしてください。</p></noscript>
+<script>
+"use strict";
+// Bhalojob static demo. Everything runs in this page; data lives in this browser only.
+
+var KEY = "bhalojob-demo-v1";
+var DEMO_PASSWORD = "demo1234";
+
+var TRACK = { engineer: "技人国", ssw: "特定技能", titp: "技能実習" };
+var TRACK_EN = { engineer: "Engineer / Specialist", ssw: "Specified Skilled Worker", titp: "Technical Intern Training" };
+var GOALS = {
+  engineer: "技人国での求職希望", ssw: "特定技能での求職希望", titp: "技能実習での求職希望",
+  university: "大学・大学院への留学希望", vocational: "専門学校への留学希望", languageSchool: "日本語学校への留学希望"
+};
+var GOAL_SHORT = { engineer: "技人国", ssw: "特定技能", titp: "技能実習", university: "大学", vocational: "専門学校", languageSchool: "日本語学校" };
+var OPT = {
+  industry: ["介護", "建設", "農業", "IT", "自動車整備", "外食", "製造", "宿泊", "水産加工", "食肉加工"],
+  country: ["バングラデシュ", "日本", "ベトナム", "ネパール", "ミャンマー", "フィリピン", "インドネシア", "スリランカ", "インド"],
+  language: ["ベンガル語", "英語", "日本語", "ベトナム語", "ネパール語", "ビルマ語", "ヒンディー語", "タガログ語"],
+  level: ["ネイティブ", "ビジネス", "日常会話", "初級", "N1", "N2", "N3", "N4", "N5"],
+  degree: ["高校", "専門学校", "短大", "大学", "大学院"],
+  visa: ["留学", "技能実習", "特定技能1号", "特定技能2号", "技術・人文知識・国際業務", "家族滞在", "特定活動"],
+  gender: ["男性", "女性", "その他"],
+  yesNo: ["有", "無"],
+  employment: ["正社員", "契約社員", "パート・アルバイト"],
+  salary: ["〜200,000円", "200,000〜250,000円", "250,000〜300,000円", "300,000円〜"]
+};
+var SALARY_RANGE = { "〜200,000円": [0, 200000], "200,000〜250,000円": [200000, 250000], "250,000〜300,000円": [250000, 300000], "300,000円〜": [300000, Infinity] };
+var POPULAR = [["介護", "Nursing care"], ["建設", "Construction"], ["農業", "Agriculture"], ["水産加工", "Seafood processing"], ["食肉加工", "Meat processing"], ["惣菜製造業", "Prepared food manufacturing"], ["紡績", "Spinning"], ["機械加工", "Machining"], ["電子機器組立て", "Electronics assembly"]];
+var STAFF = {
+  "admin@example.com": { key: "admin", name: "テスト管理者", role: "Administrator" },
+  "viewer@example.com": { key: "viewer", name: "閲覧ユーザー", role: "閲覧のみ" }
+};
+
+function daysAgo(n) {
+  var d = new Date(Date.now() - n * 86400000);
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function seed() {
+  var ind = function (o) {
+    return Object.assign({ kana: "", hasSpouse: "", hasChildren: "", mobile: "", visa: "", visaExpiry: "", intro: "", strengths: "", motivation: "", hobbies: "", goals: [], languages: [], education: [], work: [], review: "approved", reason: "", resumeFile: "", submitted: o.created }, o);
+  };
+  var co = function (o) { return Object.assign({ contact: "", intro: "", url: "" }, o); };
+  var job = function (o) {
+    return Object.assign({ work: "", emp: "正社員", desc: "", from: "", to: "", holidays: "", salary: null, features: "", active: true, review: "approved", reason: "" }, o);
+  };
+  return {
+    v: 1, member: null, staff: null, period: "month",
+    individuals: [
+      ind({ id: 1, no: "102610000001", email: "akram@example.com", name: "HOSSAIN AKRAM", kana: "ホサイン アクラム", gender: "男性", birth: "2003-08-15", nationality: "バングラデシュ", residence: "バングラデシュ", lang: "ベンガル語", hasSpouse: "無", hasChildren: "無",
+        intro: "建設現場で2年間働きました。日本で技能を学び、将来は自国で建設会社を作りたいです。", strengths: "体力があり、チームで働くのが得意です", motivation: "日本の建設技術を学びたい", hobbies: "クリケット、料理",
+        goals: ["ssw", "languageSchool"], created: daysAgo(70),
+        languages: [{ language: "ベンガル語", level: "ネイティブ" }, { language: "英語", level: "ビジネス" }, { language: "日本語", level: "N4" }],
+        education: [{ degree: "高校", school: "Dhaka City College", enrolled: "2018-01", graduated: "2020-12", major: "Science" }],
+        work: [{ company: "Rahman Construction Ltd.", industry: "建設", joined: "2021-03", left: "2023-02" }] }),
+      ind({ id: 2, no: "102610000002", email: "atiqur@example.com", name: "KHAN MD ATIQUR RAHMAN", gender: "男性", birth: "1999-02-10", nationality: "バングラデシュ", residence: "日本", lang: "ベンガル語", visa: "留学", visaExpiry: "2027-03",
+        goals: ["titp"], created: daysAgo(63),
+        languages: [{ language: "ベンガル語", level: "ネイティブ" }, { language: "日本語", level: "N3" }],
+        education: [{ degree: "大学", school: "University of Chittagong", enrolled: "2017-01", graduated: "2021-06", major: "Sociology" }, { degree: "専門学校", school: "□□日本語学校", enrolled: "2024-04", graduated: "", major: "日本語" }] }),
+      ind({ id: 3, no: "102610000003", email: "mary@example.com", name: "MARY CABALLERO", gender: "女性", birth: "1997-11-30", nationality: "フィリピン", residence: "フィリピン", lang: "英語",
+        intro: "Full-stack developer with 4 years of experience in React and Node.js.", goals: ["engineer"], created: daysAgo(56),
+        languages: [{ language: "英語", level: "ネイティブ" }, { language: "日本語", level: "N3" }],
+        education: [{ degree: "大学", school: "University of the Philippines", enrolled: "2015-06", graduated: "2019-05", major: "Computer Science" }],
+        work: [{ company: "Manila Software Inc.", industry: "IT", joined: "2019-07", left: "2023-09" }, { company: "Freelance", industry: "IT", joined: "2023-10", left: "" }] }),
+      ind({ id: 4, no: "102610000004", email: "najmul@example.com", name: "NAEM NAJMUL HASAN", gender: "男性", birth: "2001-05-22", nationality: "バングラデシュ", residence: "バングラデシュ", lang: "ベンガル語",
+        goals: ["ssw"], created: daysAgo(43), review: "rejected", reason: "学歴と日本語能力の情報が未入力です。追記して再申請してください。",
+        languages: [{ language: "ベンガル語", level: "ネイティブ" }, { language: "英語", level: "日常会話" }, { language: "日本語", level: "N5" }] }),
+      ind({ id: 5, no: "102610000005", email: "aung@example.com", name: "AUNG MYO HTET", gender: "男性", birth: "2000-07-07", nationality: "ミャンマー", residence: "ミャンマー", lang: "ビルマ語",
+        goals: ["vocational", "languageSchool"], created: daysAgo(20),
+        languages: [{ language: "日本語", level: "N5" }, { language: "英語", level: "初級" }] }),
+      ind({ id: 6, no: "102610000006", email: "hoa@example.com", name: "NGUYEN THI HOA", gender: "女性", birth: "2002-03-18", nationality: "ベトナム", residence: "ベトナム", lang: "ベトナム語",
+        intro: "ホーチミン市の高校を卒業しました。日本の大学で経済を学びたいです。", goals: ["university"], created: daysAgo(5), review: "pending",
+        languages: [{ language: "ベトナム語", level: "ネイティブ" }, { language: "日本語", level: "N3" }],
+        education: [{ degree: "高校", school: "Le Hong Phong High School", enrolled: "2017-09", graduated: "2020-06", major: "" }] }),
+      ind({ id: 7, no: "102610000007", email: "rahim@example.com", name: "RAHIM UDDIN", gender: "男性", birth: "1998-05-10", nationality: "バングラデシュ", residence: "バングラデシュ", lang: "ベンガル語",
+        intro: "ダッカのIT企業でWeb開発を3年間担当しました。", goals: ["engineer"], created: daysAgo(1), review: "pending",
+        languages: [{ language: "ベンガル語", level: "ネイティブ" }, { language: "英語", level: "ビジネス" }, { language: "日本語", level: "N4" }],
+        education: [{ degree: "大学", school: "University of Dhaka", enrolled: "2016-01", graduated: "2020-03", major: "Computer Science" }],
+        work: [{ company: "Dhaka Soft Ltd.", industry: "IT", joined: "2020-06", left: "" }] })
+    ],
+    companies: [
+      co({ id: 1, no: "202610000001", email: "hr@example-kensetsu.co.jp", name: "株式会社〇△□建設", rep: "山田 太郎", headcount: 85, industry: "建設", pref: "神奈川県", city: "横浜市西区", contact: "鈴木 一郎", founded: "1985年", url: "https://example-kensetsu.co.jp", intro: "横浜を拠点に、集合住宅と商業施設の施工を手がけています。外国人技能実習生の受け入れ実績は10年以上。寮完備、日本語学習を支援します。", created: daysAgo(75) }),
+      co({ id: 2, no: "202610000002", email: "saiyo@example-marubatsu.co.jp", name: "株式会社〇✕建設", rep: "佐藤 健", headcount: 42, industry: "建設", pref: "神奈川県", city: "厚木市", contact: "高橋 美咲", founded: "1998年", created: daysAgo(66) }),
+      co({ id: 3, no: "202610000003", email: "info@example-jidosha.co.jp", name: "株式会社△△自動車", rep: "田中 大輔", headcount: 28, industry: "自動車整備", pref: "神奈川県", city: "川崎市", founded: "2005年", created: daysAgo(48) }),
+      co({ id: 4, no: "202610000004", email: "recruit@example-sekkei.co.jp", name: "□□設計株式会社", rep: "伊藤 彩", headcount: 60, industry: "IT", pref: "東京都", city: "品川区", founded: "2010年", url: "https://example-sekkei.co.jp", created: daysAgo(45) }),
+      co({ id: 5, no: "202610000005", email: "jinji@example-sakurakai.or.jp", name: "社会福祉法人さくら会", rep: "渡辺 久美子", headcount: 150, industry: "介護", pref: "千葉県", city: "船橋市", founded: "1992年", created: daysAgo(41) }),
+      co({ id: 6, no: "202610000006", email: "contact@example-midori.co.jp", name: "株式会社みどり農園", rep: "小林 誠", headcount: 18, industry: "農業", pref: "茨城県", city: "鉾田市", founded: "2001年", created: daysAgo(24) }),
+      co({ id: 7, no: "202610000007", email: "careers@example-techbridge.jp", name: "株式会社テックブリッジ", rep: "中村 翔", headcount: 35, industry: "IT", pref: "東京都", city: "渋谷区", founded: "2018年", url: "https://example-techbridge.jp", intro: "受託開発とオフショア開発のブリッジを行うIT企業です。社内公用語は英語と日本語。", created: daysAgo(6) })
+    ],
+    schools: [
+      { id: 1, no: "202610000008", name: "〇△□大学", category: "大学・大学院", rep: "佐藤 花子", pref: "東京都", city: "八王子市", students: 4200, contact: "国際課 山本", email: "admission@example-univ.ac.jp", intro: "工学・経済・情報の3学部。留学生向けの日本語補習と奨学金制度があります。", created: daysAgo(60) },
+      { id: 2, no: "202610000009", name: "△△工学専門学校", category: "専門学校", rep: "高橋 修", pref: "神奈川県", city: "横浜市", students: 600, contact: "", email: "info@example-kogaku.ac.jp", intro: "", created: daysAgo(52) },
+      { id: 3, no: "202610000010", name: "〇✕専門学校", category: "専門学校", rep: "松本 良子", pref: "神奈川県", city: "厚木市", students: 350, contact: "", email: "nyugaku@example-marubatsu.ac.jp", intro: "", created: daysAgo(38) },
+      { id: 4, no: "202610000011", name: "□□日本語学校", category: "日本語学校", rep: "森 由美", pref: "神奈川県", city: "横浜市", students: 240, contact: "事務局", email: "office@example-nihongo.jp", intro: "進学コース（2年）と就職コース（1年）。バングラデシュ・ベトナム・ネパールからの学生が在籍。", created: daysAgo(3) }
+    ],
+    recruitments: [
+      { id: 1, sid: 1, no: 1, faculty: "工学部", dept: "情報工学科", loc: "東京都八王子市", capacity: 120, tuition: 1440000, notes: "4月入学。日本語能力N2以上。" },
+      { id: 2, sid: 1, no: 2, faculty: "経済学部", dept: "経営学科", loc: "東京都八王子市", capacity: 180, tuition: 1200000, notes: "" },
+      { id: 3, sid: 2, no: 1, faculty: "情報工学部", dept: "AI学科", loc: "神奈川県横浜市", capacity: 40, tuition: 1100000, notes: "" },
+      { id: 4, sid: 3, no: 1, faculty: "工学部", dept: "自動車整備学科", loc: "神奈川県厚木市", capacity: 60, tuition: 1000000, notes: "" },
+      { id: 5, sid: 4, no: 1, faculty: "日本語科", dept: "進学コース", loc: "神奈川県横浜市", capacity: 80, tuition: 780000, notes: "4月・10月入学" },
+      { id: 6, sid: 4, no: 2, faculty: "日本語科", dept: "就職コース", loc: "神奈川県横浜市", capacity: 40, tuition: 720000, notes: "" }
+    ],
+    jobs: [
+      job({ id: 1, cid: 1, no: 1, track: "titp", industry: "建設", type: "とび", work: "足場の組立・解体", desc: "現場での足場組立・解体作業。経験不問、入社後に研修があります。", loc: "神奈川県横浜市", from: "08:00", to: "17:30", holidays: "日曜・祝日、年末年始、夏季", salary: 190000, features: "寮完備・日本語学習支援", created: daysAgo(74) }),
+      job({ id: 2, cid: 1, no: 2, track: "ssw", industry: "建設", type: "型枠施工", work: "型枠の加工・組立", desc: "図面に基づく型枠の加工・組立・解体。特定技能1号（建設）対象。", loc: "神奈川県横浜市", from: "08:00", to: "17:30", holidays: "日曜・祝日", salary: 220000, features: "資格取得支援あり", created: daysAgo(54) }),
+      job({ id: 3, cid: 2, no: 1, track: "ssw", industry: "建設", type: "防水施工", loc: "神奈川県厚木市", from: "08:30", to: "17:30", salary: 220000, created: daysAgo(64) }),
+      job({ id: 4, cid: 2, no: 2, track: "titp", industry: "建設", type: "内装仕上げ", loc: "神奈川県厚木市", from: "08:30", to: "17:30", salary: 185000, active: false, created: daysAgo(64) }),
+      job({ id: 5, cid: 3, no: 1, track: "ssw", industry: "自動車整備", type: "自動車整備", desc: "車検・点検整備と一般整備。整備士資格の取得を支援します。", loc: "神奈川県川崎市", from: "09:00", to: "18:00", holidays: "水曜・第2火曜", salary: 230000, created: daysAgo(46) }),
+      job({ id: 6, cid: 4, no: 1, track: "engineer", industry: "IT", type: "CADオペレーター", work: "建築図面の作成", desc: "AutoCAD / Revit による建築図面の作成。技術・人文知識・国際業務ビザ対象。", loc: "東京都品川区", from: "09:30", to: "18:30", salary: 260000, created: daysAgo(44) }),
+      job({ id: 7, cid: 5, no: 1, track: "ssw", industry: "介護", type: "介護職員", desc: "特別養護老人ホームでの介護業務。夜勤は月4回程度。", loc: "千葉県船橋市", from: "07:00", to: "16:00", holidays: "シフト制（月9日）", salary: 210000, features: "介護福祉士の資格取得を全面支援", created: daysAgo(40) }),
+      job({ id: 8, cid: 6, no: 1, track: "titp", industry: "農業", type: "施設園芸", desc: "ビニールハウスでの野菜の栽培・収穫・出荷作業。", loc: "茨城県鉾田市", from: "07:30", to: "16:30", salary: 180000, created: daysAgo(22) }),
+      job({ id: 9, cid: 7, no: 1, track: "engineer", industry: "IT", type: "Webエンジニア", work: "Webアプリケーション開発", desc: "TypeScript / React / Node.js を使った受託開発。英語でのコミュニケーション可。", loc: "東京都渋谷区", from: "10:00", to: "19:00", salary: 325000, features: "リモート勤務可・英語OK", created: daysAgo(6) }),
+      job({ id: 10, cid: 7, no: 2, track: "engineer", industry: "IT", type: "Webエンジニア", work: "保守・運用", emp: "契約社員", desc: "既存Webサービスの保守・運用と小規模な機能追加。", loc: "東京都渋谷区", from: "10:00", to: "19:00", salary: 280000, review: "pending", created: daysAgo(1) }),
+      job({ id: 11, cid: 1, no: 3, track: "ssw", industry: "建設", type: "鉄筋施工", loc: "神奈川県横浜市", from: "08:00", to: "17:30", salary: 225000, created: daysAgo(2) })
+    ],
+    applications: [
+      { id: 1, iid: 1, jid: 2, status: "new", review: "approved", reason: "", created: daysAgo(12) },
+      { id: 2, iid: 2, jid: 7, status: "in_progress", review: "approved", reason: "", created: daysAgo(30) },
+      { id: 3, iid: 3, jid: 9, status: "closed", review: "approved", reason: "", created: daysAgo(4) },
+      { id: 4, iid: 1, jid: 8, status: "new", review: "pending", reason: "", created: daysAgo(2) },
+      { id: 5, iid: 3, jid: 6, status: "new", review: "pending", reason: "", created: daysAgo(0) }
+    ]
+  };
+}
+
+var S;
+function load() {
+  try {
+    var s = JSON.parse(localStorage.getItem(KEY));
+    if (s && s.v === 1) return s;
+  } catch (e) { /* storage blocked or empty: fall through */ }
+  return seed();
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* keep working in memory */ }
+}
+S = load();
+
+// ---------- helpers ----------
+function esc(v) {
+  return String(v === null || v === undefined ? "" : v).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+function byId(list, id) { id = Number(id); for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
+function nextId(list) { return list.reduce(function (m, x) { return Math.max(m, x.id); }, 0) + 1; }
+function yen(n) { return n === null || n === undefined || n === "" ? "—" : Number(n).toLocaleString("ja-JP") + "円"; }
+function fmtDate(d) { return d ? String(d).replace(/-/g, "/") : "—"; }
+function fmtMonth(m) { return m ? String(m).slice(0, 7).replace("-", "年") + "月" : ""; }
+function period(a, b) { return a || b ? (fmtMonth(a) || "?") + " 〜 " + (fmtMonth(b) || "現在") : "—"; }
+function age(birth) {
+  if (!birth) return "";
+  var b = new Date(birth), n = new Date();
+  var a = n.getFullYear() - b.getFullYear();
+  if (n.getMonth() < b.getMonth() || (n.getMonth() === b.getMonth() && n.getDate() < b.getDate())) a--;
+  return a >= 0 && a < 120 ? a + "歳" : "";
+}
+function dash(v) { return v === null || v === undefined || v === "" ? "—" : esc(v); }
+function company(job) { return byId(S.companies, job.cid) || { name: "—", no: "" }; }
+function listed(job) { return job.active && job.review === "approved"; }
+function me() { return S.member ? byId(S.member.kind === "company" ? S.companies : S.individuals, S.member.id) : null; }
+function staff() { return S.staff ? (S.staff === "admin" ? STAFF["admin@example.com"] : STAFF["viewer@example.com"]) : null; }
+function canEdit() { return S.staff === "admin"; }
+function pendingCounts() {
+  return {
+    jobs: S.jobs.filter(function (j) { return j.review === "pending"; }).length,
+    candidates: S.individuals.filter(function (i) { return i.review === "pending"; }).length,
+    applications: S.applications.filter(function (a) { return a.review === "pending"; }).length
+  };
+}
+
+function reviewBadge(kind, x) {
+  var st = x.review, label, cls;
+  if (st === "draft") { label = "未提出"; cls = "grey"; }
+  else if (st === "pending") { label = kind === "application" ? "スタッフ確認中" : "審査中"; cls = "wait"; }
+  else if (st === "rejected") { label = kind === "application" ? "見送り" : "差戻し"; cls = "ng"; }
+  else if (kind === "job") { label = x.active ? "掲載中" : "掲載停止"; cls = x.active ? "ok" : "grey"; }
+  else if (kind === "application") { label = "企業へ紹介済"; cls = "ok"; }
+  else { label = "承認済"; cls = "ok"; }
+  return '<span class="badge ' + cls + '">' + label + "</span>";
+}
+var APP_STATUS = { new: "受付", in_progress: "対応中", closed: "完了" };
+
+function select(name, options, value, placeholder, attrs) {
+  var h = '<select name="' + name + '" ' + (attrs || "") + ">";
+  if (placeholder !== null) h += '<option value="">' + esc(placeholder || "選択してください") + "</option>";
+  options.forEach(function (o) {
+    var v = Array.isArray(o) ? o[0] : o, l = Array.isArray(o) ? o[1] : o;
+    h += '<option value="' + esc(v) + '"' + (String(value) === String(v) ? " selected" : "") + ">" + esc(l) + "</option>";
+  });
+  return h + "</select>";
+}
+// ---------- public site, candidate and employer views ----------
+var flashMsg = null; // { text, ng } shown once on the next render
+var filters = { category: "", industry: "", type: "", loc: "", salary: "" };
+
+function flash() {
+  if (!flashMsg) return "";
+  var h = '<div class="flash' + (flashMsg.ng ? " ng" : "") + '" role="status">' + esc(flashMsg.text) + "</div>";
+  flashMsg = null;
+  return h;
+}
+
+function logo(href) {
+  return '<a class="logo" href="' + (href || "#/") + '" aria-label="Bhalojob ホーム"><b><span class="o">Bhalo</span><span class="r">job</span></b><span class="xs muted hide-sm">バロジョブ</span></a>';
+}
+
+function demoBar() {
+  var m = me(), st = staff();
+  var who = [];
+  if (m) who.push((S.member.kind === "company" ? "企業: " : "候補者: ") + esc(m.name));
+  if (st) who.push("スタッフ: " + esc(st.name));
+  return '<div class="demobar"><div class="wrap"><b>デモ版 DEMO</b><span class="hide-sm">データはこのブラウザ内だけに保存されます</span>' +
+    '<span class="sp"></span>' + (who.length ? '<span class="hide-sm">' + who.join(" / ") + "</span>" : "") +
+    '<button data-act="quick" data-as="candidate">候補者で入る</button>' +
+    '<button data-act="quick" data-as="company">企業で入る</button>' +
+    '<button data-act="quick" data-as="admin">管理者で入る</button>' +
+    '<button data-act="nav" data-to="#/demo">デモガイド</button>' +
+    '<button data-act="reset">リセット</button></div></div>';
+}
+
+function siteLayout(body) {
+  var m = me(), auth;
+  if (!m) auth = '<a class="btn outline" href="#/login">ログイン</a><a class="btn" href="#/register"><span class="hide-sm">無料</span>会員登録</a>';
+  else if (S.member.kind === "company") auth = '<a class="btn" href="#/employer/jobs">企業マイページ</a><button class="btn ghost hide-sm" data-act="logout">ログアウト</button>';
+  else auth = '<a class="btn" href="#/mypage">マイページ</a><button class="btn ghost hide-sm" data-act="logout">ログアウト</button>';
+  return demoBar() +
+    '<header class="header"><div class="bar"></div><div class="wrap inner">' + logo() +
+    '<nav class="nav hide-sm" aria-label="メインメニュー"><a href="#/" data-act="scroll" data-to="jobs">求人を探す</a><a href="#/" data-act="scroll" data-to="schools">学校を探す</a><a href="#/" data-act="scroll" data-to="companies">企業・学校の方へ</a></nav>' +
+    '<div class="row">' + auth + "</div></div></header>" +
+    "<main>" + body + "</main>" +
+    '<footer class="footer"><div class="wrap"><div class="col">' + logo() + '<p class="muted">世界中の優秀な人材と、日本の企業・学校をつなぎます。</p></div>' +
+    '<nav class="col" style="gap:8px" aria-label="会員"><b>会員の方</b><a href="#/register/individual">個人会員登録 (Individuals)</a><a href="#/register/corporate">法人会員登録 (Corporations)</a><a href="#/login">ログイン (Log in)</a></nav>' +
+    '<div class="col" style="gap:8px"><b>運営会社</b><span>ジャパンバングラブリッジ株式会社</span><span class="muted">Japan Bangla Bridge Co., Ltd.</span></div></div></footer>';
+}
+
+function registerChoice() {
+  return '<div class="card col" style="box-shadow:0 10px 30px rgba(0,0,0,.06)"><h3>無料会員登録 <span class="small muted" style="font-weight:400">Sign up free</span></h3>' +
+    '<a class="btn lg block" href="#/register/individual">仕事・学校を探す方（個人）</a>' +
+    '<a class="btn lg block outline" href="#/register/corporate">人材・生徒を募集する方（法人）</a>' +
+    '<p class="small muted">すでに会員の方は <a class="lnk" href="#/login">ログイン</a></p></div>';
+}
+
+function viewHome() {
+  var jobCount = function (t) { return S.jobs.filter(function (j) { return listed(j) && j.track === t; }).length; };
+  var recCount = function (c) { return S.recruitments.filter(function (r) { return byId(S.schools, r.sid).category === c; }).length; };
+  var tracks = [["engineer", "エンジニア、通訳、事務など専門職での就職。"], ["ssw", "介護・建設・外食などの分野で、即戦力として働く。"], ["titp", "日本の現場で技能を学びながら働く制度。"]];
+  var schools = [["大学・大学院", "University / Graduate school"], ["専門学校", "Vocational school"], ["日本語学校", "Japanese language school"]];
+  var how = [["無料会員登録", "ログイン情報を登録して、プロフィールを作成します。"], ["求人・学校を探す", "希望に合った求人や学校がマイページに表示されます。"], ["コンタクト申込", "気になる企業・学校を選んで申し込むと、担当者がおつなぎします。"]];
+  return siteLayout(
+    '<section class="hero"><div class="wrap"><div class="col" style="gap:22px"><span class="badge sec" style="align-self:flex-start">外国人材 × 日本の企業・学校</span>' +
+    "<h1>世界中の優秀な人材と、<br>日本の企業・学校をつなぐ。</h1>" +
+    '<p class="muted" style="font-size:18px;max-width:560px">バロジョブは、より速く、より簡単に世界中の優秀な人材と企業をマッチングするお手伝いをします。</p>' +
+    '<p class="muted small" style="max-width:560px">Bhalojob helps talented people from around the world find jobs and schools in Japan — faster and more easily.</p></div>' +
+    (me() ? '<div class="card col"><h3>ログイン中</h3><p class="small muted">' + esc(me().name) + ' さん</p><a class="btn lg block" href="' + (S.member.kind === "company" ? "#/employer/jobs" : "#/mypage") + '">マイページへ</a></div>' : registerChoice()) +
+    "</div></section>" +
+
+    '<section class="section" id="jobs"><div class="wrap"><div class="stitle"><h2>在留資格から求人を探す</h2><p class="small muted">Find jobs by visa type</p></div><div class="grid g3">' +
+    tracks.map(function (t) {
+      return '<a class="card" href="#/mypage" data-act="track" data-track="' + t[0] + '"><h3 style="font-size:20px">' + TRACK[t[0]] + '</h3><p class="small muted">' + TRACK_EN[t[0]] + '</p><p class="small" style="margin-top:14px">' + t[1] + '</p>' +
+        '<p class="small muted row between" style="margin-top:12px"><span>掲載中の求人：<b style="color:var(--fg)">' + jobCount(t[0]) + '</b>件</span><span style="color:var(--primary)">求人を見る →</span></p></a>';
+    }).join("") + "</div>" +
+    '<h3 class="small" style="margin:32px 0 12px">人気の業種 (Popular industries)</h3><div class="row">' +
+    POPULAR.map(function (p) { return '<span class="badge out">★ ' + p[0] + ' <span class="muted">&nbsp;(' + p[1] + ")</span></span>"; }).join("") + "</div></div></section>" +
+
+    '<section class="section alt" id="schools"><div class="wrap"><div class="stitle"><h2>日本に留学する</h2><p class="small muted">Study in Japan</p></div><div class="grid g3">' +
+    schools.map(function (s) { return '<div class="card"><h3 style="font-size:20px">' + s[0] + '</h3><p class="small muted">' + s[1] + '</p><p class="small muted" style="margin-top:14px">募集中の学部・学科：' + recCount(s[0]) + "件</p></div>"; }).join("") +
+    "</div></div></section>" +
+
+    '<section class="section"><div class="wrap"><div class="stitle"><h2>ご利用の流れ</h2><p class="small muted">How it works</p></div><div class="grid g3">' +
+    how.map(function (h, i) { return '<div class="step"><span class="ic">' + (i + 1) + '</span><div><p class="xs muted">STEP ' + (i + 1) + "</p><p><b>" + h[0] + '</b></p><p class="small muted" style="margin-top:4px">' + h[1] + "</p></div></div>"; }).join("") +
+    "</div></div></section>" +
+
+    '<section class="cta" id="companies"><div class="wrap"><div class="col"><h2>企業・学校の方へ</h2><p style="opacity:.92;max-width:560px">求人情報・生徒募集情報を無料で掲載できます。対象：企業・監理団体・登録支援機関・大学・大学院・専門学校・日本語学校</p></div>' +
+    '<a class="btn secondary lg" href="#/register/corporate">法人会員登録（無料）</a></div></section>'
+  );
+}
+
+function viewDemoGuide() {
+  var acc = function (rows) {
+    return '<div class="tablewrap"><table><tr><th>役割</th><th>ログインID</th><th>状態</th></tr>' + rows.map(function (r) { return "<tr><td>" + r[0] + '</td><td class="mono" style="font-size:13px;color:var(--fg)">' + r[1] + "</td><td>" + r[2] + "</td></tr>"; }).join("") + "</table></div>";
+  };
+  return siteLayout('<div class="wrap page mid"><div><h1 style="font-size:24px">デモガイド</h1><p class="muted small">Presenter guide</p></div>' +
+    '<div class="note">これはプレゼン用の静的デモです。サーバーもインストールも不要で、このHTMLファイルを開くだけで動きます。入力した内容はこのブラウザ内だけに保存され、上の「リセット」で初期状態に戻ります。</div>' +
+    '<div class="col"><h2 style="font-size:18px">ログイン</h2><p class="small">全アカウント共通のパスワード：<b class="mono" style="font-size:14px;color:var(--fg)">' + DEMO_PASSWORD + "</b>　（画面上部の黒いバーのボタンならワンクリックで入れます）</p>" +
+    acc([["候補者", "akram@example.com", "プロフィール承認済・応募あり"], ["候補者", "najmul@example.com", "プロフィール差戻し"], ["候補者", "hoa@example.com", "プロフィール審査中"],
+      ["企業", "hr@example-kensetsu.co.jp", "株式会社〇△□建設（求人3件）"], ["企業", "careers@example-techbridge.jp", "株式会社テックブリッジ（審査中の求人あり）"],
+      ["管理者", "admin@example.com", "管理画面・全権限"], ["閲覧のみ", "viewer@example.com", "管理画面・閲覧のみ"]]) + "</div>" +
+    '<div class="col"><h2 style="font-size:18px">おすすめの見せ方（約5分）</h2><ol style="margin:0;padding-left:20px" class="col">' +
+    "<li><b>トップページ</b>：在留資格別の求人数、留学先、利用の流れを紹介。</li>" +
+    "<li><b>候補者で入る</b>：マイページで審査状況を確認し、求人検索から1件「応募する」。状態は「スタッフ確認中」になります。</li>" +
+    "<li><b>管理者で入る</b>：ダッシュボードの「審査待ち」から応募を承認。求人・プロフィールの審査も同じ画面です。</li>" +
+    "<li><b>企業で入る</b>：求人一覧に応募者が表示され、履歴書を確認できます。「新規求人の登録」で求人を作ると審査待ちになります。</li>" +
+    "<li><b>管理者</b>に戻って求人を承認すると、候補者の求人検索に掲載されます。</li></ol></div>" +
+    '<div class="row"><a class="btn" href="#/">トップページへ</a><a class="btn outline" href="#/login">ログイン画面へ</a></div></div>');
+}
+
+// ---------- login / register ----------
+function viewLogin(q) {
+  if (me()) return redirect(S.member.kind === "company" ? "#/employer/jobs" : "#/mypage");
+  var quick = [["akram@example.com", "候補者（承認済）HOSSAIN AKRAM"], ["najmul@example.com", "候補者（差戻し）NAEM NAJMUL HASAN"], ["hr@example-kensetsu.co.jp", "企業　株式会社〇△□建設"], ["careers@example-techbridge.jp", "企業　株式会社テックブリッジ"]];
+  return siteLayout('<div class="wrap page narrow"><div><p class="mono">BHALO100</p><h1 style="font-size:24px">ログイン</h1><p class="muted small">Log in</p></div>' + flash() +
+    '<form class="card col" data-form="login"><label class="f">メールアドレス (Email)<input type="email" name="email" required autocomplete="off" value="' + esc(q.email || "") + '"></label>' +
+    '<label class="f">パスワード (Password)<input type="password" name="password" required></label>' +
+    '<button class="btn lg" type="submit">ログイン</button><p class="small muted">会員登録がまだの方は <a class="lnk" href="#/register">無料会員登録</a></p></form>' +
+    '<div class="card col"><h3>デモ用アカウント</h3><p class="small muted">クリックするとすぐにログインします。手入力する場合のパスワードは <b class="mono" style="color:var(--fg)">' + DEMO_PASSWORD + "</b> です。</p>" +
+    quick.map(function (a) { return '<button class="btn outline block" style="justify-content:flex-start" data-act="loginAs" data-email="' + a[0] + '">' + a[1] + "</button>"; }).join("") +
+    '</div></div>');
+}
+
+function viewRegister() {
+  return siteLayout('<div class="wrap page mid"><div><h1 style="font-size:24px">無料会員登録</h1><p class="muted small">Sign up free</p></div><div class="grid g2">' +
+    '<a class="card" href="#/register/individual"><h3>個人の方</h3><p class="small muted">Individuals</p><p class="small" style="margin-top:10px">日本で仕事を探す方、日本に留学したい方。</p></a>' +
+    '<a class="card" href="#/register/corporate"><h3>法人の方</h3><p class="small muted">Corporations</p><p class="small" style="margin-top:10px">企業・監理団体・登録支援機関の方。学校の登録は準備中です。</p></a></div></div>');
+}
+
+function viewRegisterForm(kind) {
+  var corp = kind === "corporate";
+  return siteLayout('<div class="wrap page narrow"><div><p class="mono">' + (corp ? "BHALO110" : "BHALO001") + '</p><h1 style="font-size:24px">' + (corp ? "法人会員登録" : "個人会員登録") + '</h1><p class="muted small">' + (corp ? "Corporate sign-up" : "Individual sign-up") + "</p></div>" + flash() +
+    '<form class="card col" data-form="register" data-kind="' + kind + '">' +
+    '<label class="f">' + (corp ? "法人名 (Company name)" : "氏名 (Full name)") + ' <input type="text" name="name" required maxlength="80"></label>' +
+    (corp ? '<label class="f">業種 (Industry)' + select("industry", OPT.industry, "", "選択してください", "required") + "</label>" : "") +
+    '<label class="f">メールアドレス (Email)<input type="email" name="email" required autocomplete="off"></label>' +
+    '<p class="note">デモ版ではパスワードは全アカウント共通（' + DEMO_PASSWORD + "）です。本物のパスワードは入力不要です。</p>" +
+    '<button class="btn lg" type="submit">登録する</button>' +
+    (corp ? '<p class="small muted">大学・専門学校・日本語学校の登録は準備中です。</p>' : "") + "</form></div>");
+}
+
+// ---------- candidate: My Page ----------
+function salaryOk(job) {
+  if (!filters.salary) return true;
+  var r = SALARY_RANGE[filters.salary];
+  return job.salary !== null && job.salary >= r[0] && job.salary <= r[1];
+}
+function jobResults(ind) {
+  var applied = S.applications.filter(function (a) { return a.iid === ind.id; }).map(function (a) { return a.jid; });
+  var rows = S.jobs.filter(function (j) {
+    return listed(j) && (!filters.category || j.track === filters.category) && (!filters.industry || j.industry === filters.industry) &&
+      (!filters.type || j.type.indexOf(filters.type) >= 0) && (!filters.loc || j.loc.indexOf(filters.loc) >= 0) && salaryOk(j);
+  });
+  if (!rows.length) return '<p class="empty">対象データがありません。</p>';
+  return '<p class="small muted" style="margin-bottom:8px">' + rows.length + '件</p><div class="grid g2">' + rows.map(function (j) {
+    var c = company(j), done = applied.indexOf(j.id) >= 0;
+    return '<article class="card col" style="padding:16px;font-size:14px"><div class="row"><span class="badge">' + TRACK[j.track] + "</span><b>" + esc(j.type) + "</b></div><p>" + esc(c.name) + "</p>" +
+      (j.desc ? '<p class="small muted">' + esc(j.desc) + "</p>" : "") +
+      '<dl class="kv"><dt>業種：</dt><dd>' + esc(j.industry) + "</dd><dt>勤務地：</dt><dd>" + esc(j.loc) + "</dd><dt>給与：</dt><dd><b>" + (j.salary === null ? "—" : yen(j.salary) + "／月") + "</b></dd>" +
+      (j.features ? "<dt>特徴：</dt><dd>" + esc(j.features) + "</dd>" : "") + "</dl>" +
+      '<div class="row between" style="margin-top:auto"><span class="mono">' + c.no + " " + String(j.no).padStart(2, "0") + "</span>" +
+      (done ? '<button class="btn sm outline" disabled>応募済み</button>' : '<button class="btn sm" data-act="apply" data-id="' + j.id + '">応募する</button>') + "</div></article>";
+  }).join("") + "</div>";
+}
+
+var PROFILE_COPY = {
+  draft: ["プロフィールはまだ提出されていません。プロフィールを入力し、最後の「登録してマイページへ」を押すとスタッフの審査が始まります。", "Fill in your profile and press the final button to submit it for review."],
+  pending: ["スタッフがプロフィールを確認しています。承認されると、希望に合う企業にご紹介できるようになります。", "Our staff are checking your profile. Once approved, we can introduce you to companies."],
+  approved: ["プロフィールは承認されました。希望に合う企業にご紹介できる状態です。", "Your profile is approved and can be introduced to companies."],
+  rejected: ["内容を修正して、もう一度「登録してマイページへ」を押してください。", "Please fix the points below and submit your profile again."]
+};
+
+function viewMyPage() {
+  var ind = me();
+  if (!ind || S.member.kind !== "individual") return redirect("#/login");
+  var copy = PROFILE_COPY[ind.review];
+  var apps = S.applications.filter(function (a) { return a.iid === ind.id; }).sort(function (a, b) { return b.id - a.id; });
+  var f = function (label, inner) { return '<label class="f xs">' + label + inner + "</label>"; };
+  return siteLayout('<div class="wrap page"><div class="row between"><div><p class="mono">BHALO200</p><h1 style="font-size:24px">こんにちは、' + esc(ind.name) + 'さん</h1><p class="muted small">My Page　会員番号 ' + ind.no + "</p></div>" +
+    '<div class="row"><a class="btn outline" href="#/profile/basic">プロフィール変更・確認</a><button class="btn outline" disabled title="準備中 (Coming soon)">履歴書作成</button><button class="btn outline" disabled title="準備中 (Coming soon)">アピール動画登録</button><button class="btn ghost" data-act="logout">ログアウト</button></div></div>' +
+    flash() +
+    '<div class="grid g2"><div class="card col"><h3>プロフィール審査状況 <span class="small muted" style="font-weight:400">Profile review</span></h3><div>' + reviewBadge("candidate", ind) + "</div>" +
+    (ind.review === "rejected" && ind.reason ? '<p class="flash ng">スタッフからのコメント：' + esc(ind.reason) + "</p>" : "") +
+    '<p class="small">' + copy[0] + '</p><p class="xs muted">' + copy[1] + "</p>" +
+    (ind.review !== "draft" && ind.submitted ? '<p class="xs muted">提出日：' + fmtDate(ind.submitted) + "</p>" : "") +
+    (ind.review === "draft" ? '<a class="btn" style="align-self:flex-start" href="#/profile/basic">プロフィールを入力する</a>' : "") +
+    (ind.review === "rejected" ? '<a class="btn" style="align-self:flex-start" href="#/profile/basic">修正して再申請</a>' : "") + "</div>" +
+    '<div class="card col"><h3>履歴書ファイル <span class="small muted" style="font-weight:400">Résumé file</span></h3>' +
+    (ind.resumeFile ? '<p class="small">登録済み：<b>' + esc(ind.resumeFile) + "</b></p>" : '<p class="small muted">まだ登録されていません。PDF・Word ファイルを登録できます。</p>') +
+    '<label class="btn outline" style="align-self:flex-start">ファイルを選択<input type="file" accept=".pdf,.doc,.docx" data-change="resume" style="display:none"></label>' +
+    '<p class="xs muted">デモ版ではファイル名のみ記録し、ファイル自体は保存・送信しません。</p></div></div>' +
+
+    '<section class="col"><h2 style="font-size:18px">応募状況 <span class="small muted" style="font-weight:400">Your applications</span></h2>' +
+    (apps.length ? '<div class="tablewrap"><table><tr><th>応募日</th><th>求人</th><th>企業</th><th>状況</th></tr>' + apps.map(function (a) {
+      var j = byId(S.jobs, a.jid), c = j ? company(j) : null;
+      return "<tr><td>" + fmtDate(a.created) + "</td><td>" + (j ? '<span class="badge sec">' + TRACK[j.track] + "</span> " + esc(j.type) : "—") + "</td><td>" + (c ? esc(c.name) : "—") + "</td><td>" + reviewBadge("application", a) +
+        (a.review === "approved" ? ' <span class="badge grey">' + APP_STATUS[a.status] + "</span>" : "") + (a.review === "rejected" && a.reason ? '<p class="xs muted">' + esc(a.reason) + "</p>" : "") + "</td></tr>";
+    }).join("") + "</table></div>" : '<p class="empty">まだ応募はありません。下の求人検索から応募できます。</p>') + "</section>" +
+
+    '<section><h2 class="small" style="margin-bottom:12px">人気の業種 (Popular industries)</h2><div class="row">' + POPULAR.map(function (p) { return '<span class="badge sec" style="padding:3px 12px;font-size:13px">★ ' + p[0] + "</span>"; }).join("") + "</div></section>" +
+
+    '<section class="col"><h2 style="font-size:18px">求人検索 <span class="small muted" style="font-weight:400">Job search</span></h2>' +
+    '<div class="card grid g5" style="padding:16px">' +
+    f("種別 (Classification)", select("category", Object.keys(TRACK).map(function (k) { return [k, TRACK[k]]; }), filters.category, "すべて", 'data-filter="category"')) +
+    f("業種 (Industry)", select("industry", OPT.industry, filters.industry, "すべて", 'data-filter="industry"')) +
+    f("職種 (Job type)", '<input type="text" placeholder="例：介護" data-filter="type" value="' + esc(filters.type) + '">') +
+    f("勤務地 (Location)", '<input type="text" placeholder="例：横浜" data-filter="loc" value="' + esc(filters.loc) + '">') +
+    f("給与 (Salary)", select("salary", OPT.salary, filters.salary, "すべて", 'data-filter="salary"')) + "</div>" +
+    '<div id="results">' + jobResults(ind) + "</div></section></div>");
+}
+
+// ---------- candidate: profile wizard ----------
+var STEPS = [
+  { slug: "basic", id: "BHALO010", t: "基本情報", en: "Basic information", fields: [
+    { n: "name", l: "氏名 (Full name)", type: "text", req: true, span: 2 }, { n: "kana", l: "フリガナ (Katakana)", type: "text", span: 2 },
+    { n: "gender", l: "性別 (Gender)", type: "radio", opts: "gender", req: true }, { n: "birth", l: "生年月日 (Date of birth)", type: "date", req: true },
+    { n: "hasSpouse", l: "配偶者有無 (Spouse)", type: "radio", opts: "yesNo" }, { n: "hasChildren", l: "子供有無 (Children)", type: "radio", opts: "yesNo" }] },
+  { slug: "address", id: "BHALO011", t: "住所情報", en: "Your address", fields: [
+    { n: "residence", l: "居住国 (Country of residence)", type: "select", opts: "country" }, { n: "nationality", l: "国籍 (Nationality)", type: "select", opts: "country" },
+    { n: "lang", l: "母国語 (Native language)", type: "select", opts: "language" }, { n: "mobile", l: "携帯番号 (Mobile)", type: "tel" }] },
+  { slug: "visa", id: "BHALO013", t: "VISAの詳細", en: "Visa details", desc: "日本国内にお住まいの方は入力してください (If you live in Japan)", fields: [
+    { n: "visa", l: "現在のVISAステータス (Current visa status)", type: "select", opts: "visa" }, { n: "visaExpiry", l: "VISAの有効期限 (Visa expiry)", type: "month" }] },
+  { slug: "languages", id: "BHALO014", t: "言語スキル", en: "Language skills", rows: "languages", rowLabel: "言語", fields: [
+    { n: "language", l: "言語 (Language)", type: "select", opts: "language" }, { n: "level", l: "レベル (Level)", type: "select", opts: "level" }] },
+  { slug: "education", id: "BHALO015", t: "学歴", en: "Educational background", rows: "education", rowLabel: "学歴", fields: [
+    { n: "degree", l: "学位 (Degree)", type: "select", opts: "degree" }, { n: "school", l: "学校名 (School)", type: "text" },
+    { n: "enrolled", l: "入学年月 (Enrolled)", type: "month" }, { n: "graduated", l: "卒業年月 (Graduated)", type: "month" }, { n: "major", l: "専攻科目 (Major)", type: "text", span: 2 }] },
+  { slug: "work", id: "BHALO016", t: "実務経験", en: "Work experience", desc: "実務経験のある方は入力してください (If you have work experience)", rows: "work", rowLabel: "職歴", fields: [
+    { n: "company", l: "会社名 (Company)", type: "text" }, { n: "industry", l: "業種・職種 (Industry / Job)", type: "select", opts: "industry" },
+    { n: "joined", l: "入社年月 (Joined)", type: "month" }, { n: "left", l: "退職年月 (Left)", type: "month" }] },
+  { slug: "introduction", id: "BHALO018", t: "自己紹介", en: "Self introduction", fields: [
+    { n: "intro", l: "自己紹介 (About you)", type: "textarea", span: 2 }, { n: "strengths", l: "長所 (Strengths)", type: "text", span: 2 },
+    { n: "motivation", l: "志望動機 (Motivation)", type: "text", span: 2 }, { n: "hobbies", l: "趣味 (Hobbies)", type: "text", span: 2 }] },
+  { slug: "preferences", id: "BHALO019", t: "求職希望・留学希望", en: "Select your preference", desc: "希望する項目をすべてチェックしてください (Check everything that applies)", goals: true },
+  { slug: "confirm", id: "BHALO026", t: "確認", en: "Confirm" }
+];
+
+function fieldHtml(f, value, name) {
+  var label = f.l + (f.req ? ' <span class="req">*</span>' : ""), inner;
+  if (f.type === "select") inner = select(name, OPT[f.opts], value, "選択してください");
+  else if (f.type === "radio") inner = '<span class="opts">' + OPT[f.opts].map(function (o) { return '<label><input type="radio" name="' + name + '" value="' + esc(o) + '"' + (value === o ? " checked" : "") + ">" + esc(o) + "</label>"; }).join("") + "</span>";
+  else if (f.type === "textarea") inner = '<textarea name="' + name + '" rows="6" maxlength="4000">' + esc(value) + "</textarea>";
+  else inner = '<input type="' + f.type + '" name="' + name + '" value="' + esc(value) + '" maxlength="200">';
+  if (f.type === "radio") return '<div class="f' + (f.span ? " span2" : "") + '" style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500">' + label + inner + "</div>";
+  return '<label class="f' + (f.span ? " span2" : "") + '">' + label + inner + "</label>";
+}
+
+function viewWizard(slug) {
+  var ind = me();
+  if (!ind || S.member.kind !== "individual") return redirect("#/login");
+  var idx = STEPS.findIndex(function (s) { return s.slug === slug; });
+  if (idx < 0) return redirect("#/profile/basic");
+  var st = STEPS[idx], body;
+  if (st.slug === "confirm") {
+    body = '<p class="small muted">内容を確認し、「登録してマイページへ」を押すとスタッフの審査に提出されます。</p>' + profileView(ind, true);
+  } else if (st.goals) {
+    var grp = function (title, keys) {
+      return '<div class="col" style="gap:8px"><b class="small">' + title + "</b>" + keys.map(function (k) { return '<label class="row" style="font-size:14px"><input type="checkbox" name="goal" value="' + k + '"' + (ind.goals.indexOf(k) >= 0 ? " checked" : "") + ">" + GOALS[k] + "</label>"; }).join("") + "</div>";
+    };
+    body = '<div class="grid g2">' + grp("求職希望 (Job seeking)", ["engineer", "ssw", "titp"]) + grp("留学希望 (Study in Japan)", ["university", "vocational", "languageSchool"]) + "</div>";
+  } else if (st.rows) {
+    var rows = ind[st.rows].length ? ind[st.rows] : [{}];
+    body = rows.map(function (r, i) {
+      return '<div class="rowbox col"><div class="row between"><b class="small">' + st.rowLabel + " " + (i + 1) + '</b><button type="button" class="btn sm ghost" data-act="delRow" data-i="' + i + '">削除</button></div><div class="grid g2">' +
+        st.fields.map(function (f) { return fieldHtml(f, r[f.n] || "", f.n + "__" + i); }).join("") + "</div></div>";
+    }).join("") + '<button type="button" class="btn outline" style="align-self:flex-start" data-act="addRow">＋ ' + st.rowLabel + "を追加</button>";
+  } else {
+    body = '<div class="grid g2">' + st.fields.map(function (f) { return fieldHtml(f, ind[f.n] || "", f.n); }).join("") + "</div>";
+  }
+  var last = idx === STEPS.length - 1;
+  return siteLayout('<div class="wrap page mid"><div class="col"><div class="row between"><div><p class="mono">' + st.id + '</p><h1 style="font-size:24px">' + st.t + '</h1><p class="muted small">' + st.en + '</p></div><span class="small muted">STEP ' + (idx + 1) + " / " + STEPS.length + "</span></div>" +
+    '<div class="progress"><i style="width:' + Math.round(((idx + 1) / STEPS.length) * 100) + '%"></i></div>' +
+    '<div class="steps">' + STEPS.map(function (s, i) { return '<a href="#/profile/' + s.slug + '"' + (i === idx ? ' class="on"' : "") + ">" + (i + 1) + ". " + s.t + "</a>"; }).join("") + "</div></div>" + flash() +
+    '<form class="card col" style="gap:18px" data-form="wizard" data-slug="' + st.slug + '" data-count="' + (st.rows ? Math.max(ind[st.rows].length, 1) : 0) + '">' +
+    (st.desc ? '<p class="small muted">' + st.desc + "</p>" : "") + body +
+    '<div class="row between" style="margin-top:8px">' + (idx > 0 ? '<a class="btn outline" href="#/profile/' + STEPS[idx - 1].slug + '">← 戻る</a>' : '<a class="btn outline" href="#/mypage">マイページへ</a>') +
+    '<button class="btn lg" type="submit">' + (last ? "登録してマイページへ" : "保存して次へ →") + "</button></div></form></div>");
+}
+
+function collectStep(form, ind) {
+  var st = STEPS.find(function (s) { return s.slug === form.dataset.slug; });
+  var fd = new FormData(form);
+  if (st.goals) ind.goals = fd.getAll("goal");
+  else if (st.rows) {
+    var out = [];
+    for (var i = 0; i < Number(form.dataset.count); i++) {
+      var row = {}, any = false;
+      st.fields.forEach(function (f) { row[f.n] = String(fd.get(f.n + "__" + i) || "").trim(); if (row[f.n]) any = true; });
+      if (any) out.push(row);
+    }
+    ind[st.rows] = out;
+  } else if (st.fields) {
+    st.fields.forEach(function (f) { ind[f.n] = String(fd.get(f.n) || "").trim(); });
+  }
+  return st;
+}
+
+// Shared read-only profile (candidate confirm step, employer applicant view, staff review).
+function profileView(p, compact) {
+  var sec = function (title, inner) { return '<div class="card col"><h3>' + title + "</h3>" + inner + "</div>"; };
+  var tbl = function (heads, rows) {
+    if (!rows.length) return '<p class="small muted">登録なし</p>';
+    return '<div class="tablewrap"><table><tr>' + heads.map(function (h) { return "<th>" + h + "</th>"; }).join("") + "</tr>" + rows.map(function (r) { return "<tr>" + r.map(function (c) { return "<td>" + c + "</td>"; }).join("") + "</tr>"; }).join("") + "</table></div>";
+  };
+  return '<div class="col" style="gap:16px">' +
+    sec("基本情報", '<dl class="kv"><dt>氏名</dt><dd><b>' + dash(p.name) + "</b>" + (p.kana ? "（" + esc(p.kana) + "）" : "") + "</dd><dt>性別</dt><dd>" + dash(p.gender) + "</dd><dt>生年月日</dt><dd>" + fmtDate(p.birth) + (age(p.birth) ? "（" + age(p.birth) + "）" : "") +
+      "</dd><dt>国籍</dt><dd>" + dash(p.nationality) + "</dd><dt>居住国</dt><dd>" + dash(p.residence) + "</dd><dt>母国語</dt><dd>" + dash(p.lang) + "</dd><dt>在留資格</dt><dd>" + dash(p.visa) + (p.visaExpiry ? "（" + fmtMonth(p.visaExpiry) + "まで）" : "") +
+      "</dd><dt>希望</dt><dd>" + (p.goals.length ? p.goals.map(function (g) { return '<span class="badge sec">' + GOAL_SHORT[g] + "</span>"; }).join(" ") : "—") + "</dd></dl>") +
+    sec("言語スキル", tbl(["言語", "レベル"], p.languages.map(function (l) { return [dash(l.language), dash(l.level)]; }))) +
+    sec("学歴", tbl(["学位", "学校名", "期間", "専攻"], p.education.map(function (e) { return [dash(e.degree), dash(e.school), period(e.enrolled, e.graduated), dash(e.major)]; }))) +
+    sec("実務経験", tbl(["会社名", "業種", "期間"], p.work.map(function (w) { return [dash(w.company), dash(w.industry), period(w.joined, w.left)]; }))) +
+    sec("自己紹介", '<p class="small" style="white-space:pre-wrap">' + dash(p.intro) + '</p><dl class="kv"><dt>長所</dt><dd>' + dash(p.strengths) + "</dd><dt>志望動機</dt><dd>" + dash(p.motivation) + "</dd><dt>趣味</dt><dd>" + dash(p.hobbies) + "</dd></dl>") +
+    (compact ? "" : sec("履歴書ファイル", p.resumeFile ? '<p class="small">' + esc(p.resumeFile) + '</p><p class="xs muted">デモ版ではファイルは開けません。</p>' : '<p class="small muted">登録なし</p>')) + "</div>";
+}
+
+// ---------- employer ----------
+function employerShell(active, body) {
+  var c = me();
+  if (!c || S.member.kind !== "company") return redirect("#/login");
+  var tab = function (href, label, key) { return '<a href="' + href + '"' + (active === key ? ' class="on"' : "") + ">" + label + "</a>"; };
+  return siteLayout('<div class="wrap page"><div class="row between"><div><p class="small muted">企業マイページ　法人会員番号 ' + c.no + '</p><h1 style="font-size:24px">' + esc(c.name) + '</h1></div><button class="btn ghost" data-act="logout">ログアウト</button></div>' +
+    '<nav class="subnav">' + tab("#/employer/jobs", "求人情報", "jobs") + tab("#/employer", "会社情報", "profile") + "</nav>" + flash() + body + "</div>");
+}
+
+function viewEmployerProfile() {
+  var c = me();
+  if (!c || S.member.kind !== "company") return redirect("#/login");
+  var inp = function (n, l, type, span) { return '<label class="f' + (span ? " span2" : "") + '">' + l + '<input type="' + (type || "text") + '" name="' + n + '" value="' + esc(c[n]) + '" maxlength="200"></label>'; };
+  return employerShell("profile", '<form class="card col" data-form="company"><div><p class="mono">BHALO111</p><h3>会社情報 <span class="small muted" style="font-weight:400">Company profile</span></h3></div><div class="grid g2">' +
+    inp("name", "法人名", "text", true) + inp("rep", "代表者名") + inp("founded", "設立") + inp("headcount", "従業員数", "number") +
+    '<label class="f">業種' + select("industry", OPT.industry, c.industry, "選択してください") + "</label>" + inp("pref", "都道府県") + inp("city", "市区町村") + inp("contact", "担当者名") + inp("url", "ホームページ") +
+    '<label class="f span2">会社紹介<textarea name="intro" rows="5" maxlength="2000">' + esc(c.intro) + "</textarea></label></div>" +
+    '<div class="row"><button class="btn" type="submit">保存する</button></div></form>');
+}
+
+function viewEmployerJobs() {
+  var c = me();
+  if (!c || S.member.kind !== "company") return redirect("#/login");
+  var jobs = S.jobs.filter(function (j) { return j.cid === c.id; });
+  return employerShell("jobs", '<div class="row between"><div><p class="mono">BHALO115</p><h2 style="font-size:18px">求人一覧 <span class="small muted" style="font-weight:400">Your job postings</span></h2></div><a class="btn" href="#/employer/jobs/new">＋ 新規求人の登録</a></div>' +
+    (jobs.length ? '<div class="tablewrap"><table><tr><th>No.</th><th>種別</th><th>職種</th><th>勤務地</th><th>給与</th><th>状態</th><th>応募者</th><th></th></tr>' + jobs.map(function (j) {
+      var n = S.applications.filter(function (a) { return a.jid === j.id && a.review === "approved"; }).length;
+      return '<tr><td class="mono">' + String(j.no).padStart(2, "0") + '</td><td><span class="badge sec">' + TRACK[j.track] + "</span></td><td>" + esc(j.type) + "</td><td>" + esc(j.loc) + "</td><td>" + (j.salary === null ? "—" : yen(j.salary)) + "</td><td>" + reviewBadge("job", j) +
+        (j.review === "rejected" && j.reason ? '<p class="xs muted">' + esc(j.reason) + "</p>" : "") + "</td><td>" + (n ? "<b>" + n + "</b>名" : '<span class="muted">0名</span>') + '</td><td><a class="lnk" href="#/employer/jobs/' + j.id + '">詳細</a></td></tr>';
+    }).join("") + "</table></div>" : '<p class="empty">まだ求人がありません。「新規求人の登録」から作成してください。</p>') +
+    '<p class="small muted">登録した求人はスタッフの審査後にサイトへ掲載されます。応募者はスタッフが確認した方のみ表示されます。</p>');
+}
+
+function viewEmployerJobNew() {
+  var c = me();
+  if (!c || S.member.kind !== "company") return redirect("#/login");
+  var inp = function (n, l, type, extra, span) { return '<label class="f' + (span ? " span2" : "") + '">' + l + '<input type="' + (type || "text") + '" name="' + n + '" maxlength="200" ' + (extra || "") + "></label>"; };
+  return employerShell("jobs", '<form class="card col" style="gap:18px" data-form="job"><div><p class="mono">BHALO116</p><h3>新規求人の登録 <span class="small muted" style="font-weight:400">New job posting</span></h3><p class="small muted">登録した求人はスタッフの審査後にサイトへ掲載されます。</p></div><div class="grid g2">' +
+    '<label class="f">種別 <span class="req">*</span>' + select("track", Object.keys(TRACK).map(function (k) { return [k, TRACK[k]]; }), "", "選択してください", "required") + "</label>" +
+    '<label class="f">業種 <span class="req">*</span>' + select("industry", OPT.industry, c.industry, "選択してください", "required") + "</label>" +
+    inp("type", '職種 <span class="req">*</span>', "text", 'required placeholder="例：型枠施工"') + inp("work", "作業名", "text", 'placeholder="例：型枠の加工・組立"') +
+    '<label class="f">雇用形態' + select("emp", OPT.employment, "正社員", null) + "</label>" + inp("loc", '勤務地 <span class="req">*</span>', "text", 'required value="' + esc((c.pref || "") + (c.city || "")) + '"') +
+    inp("from", "始業時間", "time", 'value="09:00"') + inp("to", "終業時間", "time", 'value="18:00"') + inp("salary", "月給（円）", "number", 'min="0" step="1000" placeholder="220000"') + inp("holidays", "休日", "text", 'placeholder="例：土日祝"') +
+    inp("features", "特徴", "text", 'placeholder="例：寮完備・日本語学習支援"', true) +
+    '<label class="f span2">仕事内容<textarea name="desc" rows="4" maxlength="2000"></textarea></label></div>' +
+    '<div class="row"><button class="btn" type="submit">登録して審査に出す</button><a class="btn outline" href="#/employer/jobs">キャンセル</a></div></form>');
+}
+
+function jobDetail(j) {
+  return '<dl class="kv"><dt>種別</dt><dd><span class="badge sec">' + TRACK[j.track] + "</span></dd><dt>業種</dt><dd>" + dash(j.industry) + "</dd><dt>職種</dt><dd>" + dash(j.type) + "</dd><dt>作業名</dt><dd>" + dash(j.work) + "</dd><dt>雇用形態</dt><dd>" + dash(j.emp) +
+    "</dd><dt>勤務地</dt><dd>" + dash(j.loc) + "</dd><dt>勤務時間</dt><dd>" + (j.from || j.to ? esc(j.from) + " 〜 " + esc(j.to) : "—") + "</dd><dt>休日</dt><dd>" + dash(j.holidays) + "</dd><dt>月給</dt><dd>" + (j.salary === null ? "—" : yen(j.salary)) +
+    "</dd><dt>特徴</dt><dd>" + dash(j.features) + "</dd><dt>仕事内容</dt><dd>" + dash(j.desc) + "</dd><dt>登録日</dt><dd>" + fmtDate(j.created) + "</dd></dl>";
+}
+
+function viewEmployerJob(id) {
+  var c = me();
+  if (!c || S.member.kind !== "company") return redirect("#/login");
+  var j = byId(S.jobs, id);
+  if (!j || j.cid !== c.id) return redirect("#/employer/jobs");
+  var apps = S.applications.filter(function (a) { return a.jid === j.id && a.review === "approved"; });
+  return employerShell("jobs", '<a class="lnk small" href="#/employer/jobs">← 求人一覧へ</a><div class="grid g2"><div class="card col"><div class="row between"><h3>' + esc(j.type) + " <span class=\"mono\">No." + String(j.no).padStart(2, "0") + "</span></h3>" + reviewBadge("job", j) + "</div>" +
+    (j.review === "rejected" && j.reason ? '<p class="flash ng">スタッフからのコメント：' + esc(j.reason) + "</p>" : "") + jobDetail(j) + "</div>" +
+    '<div class="card col"><h3>応募者 <span class="small muted" style="font-weight:400">Applicants</span></h3>' +
+    (apps.length ? apps.map(function (a) {
+      var p = byId(S.individuals, a.iid);
+      return '<a class="card" style="padding:14px" href="#/employer/applicants/' + a.id + '"><div class="row between"><b>' + esc(p.name) + '</b><span class="badge grey">' + APP_STATUS[a.status] + '</span></div><p class="small muted">' + dash(p.nationality) + "・" + (age(p.birth) || "—") + "・応募日 " + fmtDate(a.created) + '</p><p class="small" style="color:var(--primary)">履歴書を見る →</p></a>';
+    }).join("") : '<p class="small muted">スタッフが確認した応募者がここに表示されます。現在はいません。</p>') + "</div></div>");
+}
+
+function viewEmployerApplicant(id) {
+  var c = me();
+  if (!c || S.member.kind !== "company") return redirect("#/login");
+  var a = byId(S.applications, id), j = a ? byId(S.jobs, a.jid) : null;
+  if (!a || !j || j.cid !== c.id || a.review !== "approved") return redirect("#/employer/jobs");
+  var p = byId(S.individuals, a.iid);
+  return employerShell("jobs", '<a class="lnk small" href="#/employer/jobs/' + j.id + '">← ' + esc(j.type) + " の応募者へ</a>" +
+    '<div class="row between"><div><h2 style="font-size:20px">' + esc(p.name) + ' さんの履歴書</h2><p class="small muted">応募求人：' + esc(j.type) + "　応募日：" + fmtDate(a.created) + '</p></div><button class="btn outline" data-act="print">印刷する</button></div>' +
+    '<p class="note">面接のご希望や選考結果は、バロジョブの担当スタッフまでご連絡ください。連絡先は紹介時にお伝えします。</p>' + profileView(p));
+}
+// ---------- staff console ----------
+function viewAdminLogin() {
+  if (staff()) return redirect("#/admin");
+  return demoBar() + '<main class="wrap page narrow" style="padding-top:72px">' + logo() + '<div><p class="mono">BHALO800</p><h1 style="font-size:24px">管理画面ログイン</h1><p class="muted small">Staff console</p></div>' + flash() +
+    '<form class="card col" data-form="staffLogin"><label class="f">ログインID<input type="email" name="email" required autocomplete="off"></label><label class="f">パスワード<input type="password" name="password" required></label><button class="btn lg" type="submit">ログイン</button></form>' +
+    '<div class="card col"><h3>デモ用アカウント</h3><p class="small muted">手入力する場合のパスワードは <b class="mono" style="color:var(--fg)">' + DEMO_PASSWORD + '</b> です。</p>' +
+    '<button class="btn outline block" style="justify-content:flex-start" data-act="staffAs" data-key="admin">Administrator（全権限）admin@example.com</button>' +
+    '<button class="btn outline block" style="justify-content:flex-start" data-act="staffAs" data-key="viewer">閲覧のみ　viewer@example.com</button>' +
+    '<a class="lnk small" href="#/">← サイトへ戻る</a></div></main>';
+}
+
+function adminLayout(active, body) {
+  var st = staff();
+  if (!st) return redirect("#/admin/login");
+  var pc = pendingCounts(), total = pc.jobs + pc.candidates + pc.applications;
+  var item = function (key, href, label, code, n) {
+    return '<a href="' + href + '"' + (active === key ? ' class="on"' : "") + ">" + label + (n ? ' <span class="n">' + n + "</span>" : ' <span class="mono" style="font-size:10px">' + code + "</span>") + "</a>";
+  };
+  return demoBar() + '<div class="atop"><div class="in">' + logo("#/admin") + '<div class="row"><span class="small muted hide-sm">' + esc(st.name) + "（" + st.role + '）</span><a class="btn sm outline" href="#/">サイトを見る</a><button class="btn sm ghost" data-act="staffLogout">ログアウト</button></div></div></div>' +
+    '<div class="admin"><nav class="side" aria-label="管理メニュー">' + item("dash", "#/admin", "ダッシュボード", "800") +
+    "<p>審査</p>" + item("reviews", "#/admin/reviews", "審査待ち", "810", total) +
+    "<p>会員</p>" + item("members", "#/admin/members", "個人会員", "820") + item("companies", "#/admin/companies", "企業", "830") + item("schools", "#/admin/schools", "学校", "840") +
+    "<p>求人・募集</p>" + item("jobs", "#/admin/jobs", "求人情報", "850") + item("recruitments", "#/admin/recruitments", "生徒募集", "860") + item("applications", "#/admin/applications", "応募", "870") +
+    '</nav><main class="amain">' + flash() + (canEdit() ? "" : '<p class="note">閲覧のみのアカウントです。承認・変更はできません。</p>') + body + "</main></div>";
+}
+
+function head(code, title, en) { return '<div><p class="mono">' + code + '</p><h1 style="font-size:22px">' + title + (en ? ' <span class="small muted" style="font-weight:400">' + en + "</span>" : "") + "</h1></div>"; }
+function table(heads, rows) {
+  return '<div class="tablewrap"><table><tr>' + heads.map(function (h) { return "<th>" + h + "</th>"; }).join("") + "</tr>" +
+    (rows.length ? rows.map(function (r) { return "<tr>" + r.map(function (c) { return "<td>" + c + "</td>"; }).join("") + "</tr>"; }).join("") : '<tr><td class="empty" colspan="' + heads.length + '">対象データがありません。</td></tr>') + "</table></div>";
+}
+function reviewButtons(kind, id) {
+  var dis = canEdit() ? "" : " disabled title=\"閲覧のみ\"";
+  return '<span class="row" style="flex-wrap:nowrap"><button class="btn sm" data-act="review" data-kind="' + kind + '" data-id="' + id + '" data-ok="1"' + dis + '>承認</button><button class="btn sm danger" data-act="review" data-kind="' + kind + '" data-id="' + id + '" data-ok="0"' + dis + ">差戻し</button></span>";
+}
+function goalBadges(p) { return p.goals.map(function (g) { return '<span class="badge sec">' + GOAL_SHORT[g] + "</span>"; }).join(" ") || "—"; }
+
+function viewAdminDash() {
+  var days = { today: 0, week: 7, month: 30 }[S.period], since = daysAgo(days);
+  var fresh = function (list) { return list.filter(function (x) { return x.created >= since; }).length; };
+  var pc = pendingCounts();
+  var ptile = function (key, label, n) {
+    return '<a class="tile' + (n ? " hot" : "") + '" href="#/admin/reviews?tab=' + key + '"><span class="ic">' + label.charAt(0) + '</span><div><p class="small muted">' + label + '</p><p class="num">' + n + '<span class="small" style="font-weight:400"> 件</span></p></div></a>';
+  };
+  var tile = function (label, n) { return '<div class="tile"><span class="ic">' + label.charAt(label.length - 1) + '</span><div><p class="small muted">' + label + '</p><p class="num">' + n + "</p></div></div>"; };
+  var seg = [["today", "当日"], ["week", "週間"], ["month", "今月"]];
+  var st = staff();
+  if (!st) return redirect("#/admin/login");
+  var recentM = S.individuals.slice().sort(function (a, b) { return b.id - a.id; }).slice(0, 5);
+  var recentJ = S.jobs.slice().sort(function (a, b) { return b.id - a.id; }).slice(0, 5);
+  return adminLayout("dash", '<div class="row between"><div><p class="mono">BHALO800</p><h1 style="font-size:22px">こんにちは、' + esc(st.name) + 'さん</h1></div><div class="seg" role="group" aria-label="集計期間">' +
+    seg.map(function (s) { return '<button data-act="period" data-p="' + s[0] + '"' + (S.period === s[0] ? ' class="on"' : "") + ">" + s[1] + "</button>"; }).join("") + "</div></div>" +
+    '<section class="col"><h2 class="small muted">審査待ち</h2><div class="grid g3">' + ptile("jobs", "求人", pc.jobs) + ptile("candidates", "候補者プロフィール", pc.candidates) + ptile("applications", "応募", pc.applications) + "</div></section>" +
+    '<div class="grid g3">' + tile("新規個人会員", fresh(S.individuals)) + tile("新規企業会員", fresh(S.companies)) + tile("新規学校会員", fresh(S.schools)) +
+    tile("アクティブユーザ", S.individuals.length) + tile("アクティブ企業", S.companies.length) + tile("アクティブ学校", S.schools.length) + "</div>" +
+    '<div class="grid g2"><div class="col"><h2 style="font-size:16px">最近登録した個人会員</h2>' + table(["会員番号", "氏名", "希望種別", "状態"], recentM.map(function (m) {
+      return ['<a class="lnk mono" style="color:var(--primary)" href="#/admin/members/' + m.id + '">' + m.no + "</a>", esc(m.name), goalBadges(m), reviewBadge("candidate", m)];
+    })) + '</div><div class="col"><h2 style="font-size:16px">最近登録した求人情報</h2>' + table(["法人名", "種別", "職種", "状態"], recentJ.map(function (j) {
+      return ['<a class="lnk" href="#/admin/jobs/' + j.id + '">' + esc(company(j).name) + "</a>", '<span class="badge sec">' + TRACK[j.track] + "</span>", esc(j.type), reviewBadge("job", j)];
+    })) + "</div></div>");
+}
+
+function viewReviews(q) {
+  var tab = q.tab || "jobs", pc = pendingCounts();
+  var t = function (key, label) { return '<a href="#/admin/reviews?tab=' + key + '"' + (tab === key ? ' class="on"' : "") + ">" + label + "（" + pc[key] + "）</a>"; };
+  var body;
+  if (tab === "candidates") {
+    body = table(["会員番号", "氏名", "国籍", "希望", "提出日", "", ""], S.individuals.filter(function (i) { return i.review === "pending"; }).map(function (p) {
+      return ['<span class="mono">' + p.no + "</span>", esc(p.name), dash(p.nationality), goalBadges(p), fmtDate(p.submitted), '<a class="lnk" href="#/admin/members/' + p.id + '">プロフィールを見る</a>', reviewButtons("candidate", p.id)];
+    }));
+  } else if (tab === "applications") {
+    body = table(["応募日", "候補者", "求人", "企業", "候補者の状態", ""], S.applications.filter(function (a) { return a.review === "pending"; }).map(function (a) {
+      var p = byId(S.individuals, a.iid), j = byId(S.jobs, a.jid);
+      return [fmtDate(a.created), '<a class="lnk" href="#/admin/members/' + p.id + '">' + esc(p.name) + "</a>", '<a class="lnk" href="#/admin/jobs/' + j.id + '">' + esc(j.type) + "</a>", esc(company(j).name), reviewBadge("candidate", p), reviewButtons("application", a.id)];
+    }));
+  } else {
+    body = table(["法人名", "種別", "職種", "勤務地", "月給", "申請日", "", ""], S.jobs.filter(function (j) { return j.review === "pending"; }).map(function (j) {
+      return [esc(company(j).name), '<span class="badge sec">' + TRACK[j.track] + "</span>", esc(j.type), esc(j.loc), j.salary === null ? "—" : yen(j.salary), fmtDate(j.created), '<a class="lnk" href="#/admin/jobs/' + j.id + '">詳細</a>', reviewButtons("job", j.id)];
+    }));
+  }
+  return adminLayout("reviews", head("BHALO810", "審査待ち", "Review queue") + '<nav class="subnav">' + t("jobs", "求人") + t("candidates", "候補者プロフィール") + t("applications", "応募") + "</nav>" + body +
+    '<p class="small muted">承認した求人はサイトに掲載され、承認した応募は企業の画面に表示されます。差戻しの理由は本人の画面に表示されます。</p>');
+}
+
+function viewMembers() {
+  return adminLayout("members", head("BHALO820", "個人会員", "Candidates") + table(["会員番号", "氏名", "国籍", "希望", "メール", "登録日", "状態"], S.individuals.map(function (p) {
+    return ['<a class="lnk mono" style="color:var(--primary)" href="#/admin/members/' + p.id + '">' + p.no + "</a>", esc(p.name), dash(p.nationality), goalBadges(p), esc(p.email), fmtDate(p.created), reviewBadge("candidate", p)];
+  })));
+}
+
+function viewMember(id) {
+  var p = byId(S.individuals, id);
+  if (!p) return redirect("#/admin/members");
+  var apps = S.applications.filter(function (a) { return a.iid === p.id; });
+  return adminLayout("members", '<a class="lnk small" href="#/admin/members">← 個人会員一覧へ</a><div class="row between">' + head("BHALO821", esc(p.name), p.no) + '<div class="row">' + reviewBadge("candidate", p) + (p.review === "pending" ? reviewButtons("candidate", p.id) : "") + "</div></div>" +
+    (p.review === "rejected" && p.reason ? '<p class="flash ng">差戻し理由：' + esc(p.reason) + "</p>" : "") +
+    '<div class="grid g2" style="align-items:start">' + profileView(p) + '<div class="col"><div class="card col"><h3>連絡先</h3><dl class="kv"><dt>メール</dt><dd>' + esc(p.email) + "</dd><dt>携帯</dt><dd>" + dash(p.mobile) + "</dd><dt>登録日</dt><dd>" + fmtDate(p.created) + "</dd></dl></div>" +
+    '<div class="card col"><h3>応募履歴</h3>' + (apps.length ? apps.map(function (a) { var j = byId(S.jobs, a.jid); return '<div class="row between small"><span>' + esc(j.type) + "（" + esc(company(j).name) + "）</span>" + reviewBadge("application", a) + "</div>"; }).join("") : '<p class="small muted">応募なし</p>') + "</div></div></div>");
+}
+
+function viewCompanies() {
+  return adminLayout("companies", head("BHALO830", "企業", "Companies") + table(["法人会員番号", "法人名", "業種", "所在地", "代表者", "従業員数", "求人数", "登録日"], S.companies.map(function (c) {
+    return ['<span class="mono">' + c.no + "</span>", "<b>" + esc(c.name) + "</b>" + (c.intro ? '<p class="xs muted" style="max-width:320px">' + esc(c.intro) + "</p>" : ""), dash(c.industry), esc((c.pref || "") + (c.city || "")), dash(c.rep), dash(c.headcount), S.jobs.filter(function (j) { return j.cid === c.id; }).length + "件", fmtDate(c.created)];
+  })));
+}
+
+function viewSchools() {
+  return adminLayout("schools", head("BHALO840", "学校", "Schools") + table(["法人会員番号", "学校名", "種別", "所在地", "代表者", "学生数", "募集数", "登録日"], S.schools.map(function (s) {
+    return ['<span class="mono">' + s.no + "</span>", "<b>" + esc(s.name) + "</b>" + (s.intro ? '<p class="xs muted" style="max-width:320px">' + esc(s.intro) + "</p>" : ""), '<span class="badge sec">' + s.category + "</span>", esc(s.pref + s.city), dash(s.rep), Number(s.students).toLocaleString("ja-JP") + "名", S.recruitments.filter(function (r) { return r.sid === s.id; }).length + "件", fmtDate(s.created)];
+  })) + '<p class="small muted">学校の情報はスタッフが登録・管理します。学校ご自身による会員登録は準備中です。</p>');
+}
+
+function viewRecruitments() {
+  return adminLayout("recruitments", head("BHALO860", "生徒募集", "Student recruitment") + table(["学校名", "種別", "学部", "学科・コース", "所在地", "定員", "年間学費", "備考"], S.recruitments.map(function (r) {
+    var s = byId(S.schools, r.sid);
+    return [esc(s.name), '<span class="badge sec">' + s.category + "</span>", esc(r.faculty), esc(r.dept), esc(r.loc), r.capacity + "名", yen(r.tuition), dash(r.notes)];
+  })));
+}
+
+function viewAdminJobs() {
+  return adminLayout("jobs", head("BHALO850", "求人情報", "Job postings") + table(["法人名", "No.", "種別", "職種", "勤務地", "月給", "状態", "応募", ""], S.jobs.map(function (j) {
+    return [esc(company(j).name), '<span class="mono">' + String(j.no).padStart(2, "0") + "</span>", '<span class="badge sec">' + TRACK[j.track] + "</span>", esc(j.type), esc(j.loc), j.salary === null ? "—" : yen(j.salary), reviewBadge("job", j), S.applications.filter(function (a) { return a.jid === j.id; }).length + "件", '<a class="lnk" href="#/admin/jobs/' + j.id + '">詳細</a>'];
+  })));
+}
+
+function viewAdminJob(id) {
+  var j = byId(S.jobs, id);
+  if (!j) return redirect("#/admin/jobs");
+  var c = company(j), dis = canEdit() ? "" : " disabled";
+  return adminLayout("jobs", '<a class="lnk small" href="#/admin/jobs">← 求人一覧へ</a><div class="row between">' + head("BHALO851", esc(j.type), esc(c.name)) + '<div class="row">' + reviewBadge("job", j) +
+    (j.review === "pending" ? reviewButtons("job", j.id) : "") + (j.review === "approved" ? '<button class="btn sm outline" data-act="toggleJob" data-id="' + j.id + '"' + dis + ">" + (j.active ? "掲載を停止する" : "掲載を再開する") + "</button>" : "") + "</div></div>" +
+    (j.review === "rejected" && j.reason ? '<p class="flash ng">差戻し理由：' + esc(j.reason) + "</p>" : "") +
+    '<div class="grid g2" style="align-items:start"><div class="card col"><h3>求人内容</h3>' + jobDetail(j) + '</div><div class="card col"><h3>企業</h3><dl class="kv"><dt>法人名</dt><dd>' + esc(c.name) + "</dd><dt>会員番号</dt><dd>" + c.no + "</dd><dt>代表者</dt><dd>" + dash(c.rep) + "</dd><dt>所在地</dt><dd>" + esc((c.pref || "") + (c.city || "")) + "</dd><dt>メール</dt><dd>" + esc(c.email) + "</dd></dl></div></div>");
+}
+
+function viewAdminApps() {
+  var dis = canEdit() ? "" : " disabled";
+  return adminLayout("applications", head("BHALO870", "応募", "Applications") + table(["応募日", "候補者", "求人", "企業", "審査", "対応状況"], S.applications.slice().sort(function (a, b) { return b.id - a.id; }).map(function (a) {
+    var p = byId(S.individuals, a.iid), j = byId(S.jobs, a.jid);
+    return [fmtDate(a.created), '<a class="lnk" href="#/admin/members/' + p.id + '">' + esc(p.name) + "</a>", '<a class="lnk" href="#/admin/jobs/' + j.id + '">' + esc(j.type) + "</a>", esc(company(j).name),
+      reviewBadge("application", a) + (a.review === "pending" ? " " + reviewButtons("application", a.id) : "") + (a.review === "rejected" && a.reason ? '<p class="xs muted">' + esc(a.reason) + "</p>" : ""),
+      a.review === "approved" ? select("status", Object.keys(APP_STATUS).map(function (k) { return [k, APP_STATUS[k]]; }), a.status, null, 'data-change="appStatus" data-id="' + a.id + '" style="width:auto" aria-label="対応状況"' + dis) : "—"];
+  })));
+}
+// ---------- router, actions, forms ----------
+var pendingRedirect = null, pendingScroll = null, lastPath = null;
+function redirect(hash) { pendingRedirect = hash; return null; }
+function go(hash) { if (location.hash === hash) render(); else location.hash = hash; }
+function say(text, ng) { flashMsg = { text: text, ng: !!ng }; }
+function today() { return daysAgo(0); }
+
+function parseHash() {
+  var raw = location.hash.replace(/^#/, "") || "/";
+  var parts = raw.split("?"), q = {};
+  (parts[1] || "").split("&").forEach(function (kv) { if (kv) { var p = kv.split("="); q[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || ""); } });
+  return { path: parts[0].replace(/\/+$/, "") || "/", q: q };
+}
+
+function route(path, q) {
+  var m;
+  if (path === "/") return viewHome();
+  if (path === "/demo") return viewDemoGuide();
+  if (path === "/login") return viewLogin(q);
+  if (path === "/register") return viewRegister();
+  if (path === "/register/individual") return viewRegisterForm("individual");
+  if (path === "/register/corporate") return viewRegisterForm("corporate");
+  if (path === "/mypage") return viewMyPage();
+  if (path === "/profile") return redirect("#/profile/basic");
+  if ((m = path.match(/^\/profile\/([a-z]+)$/))) return viewWizard(m[1]);
+  if (path === "/employer") return viewEmployerProfile();
+  if (path === "/employer/jobs") return viewEmployerJobs();
+  if (path === "/employer/jobs/new") return viewEmployerJobNew();
+  if ((m = path.match(/^\/employer\/jobs\/(\d+)$/))) return viewEmployerJob(m[1]);
+  if ((m = path.match(/^\/employer\/applicants\/(\d+)$/))) return viewEmployerApplicant(m[1]);
+  if (path === "/admin/login") return viewAdminLogin();
+  if (path === "/admin") return viewAdminDash();
+  if (path === "/admin/reviews") return viewReviews(q);
+  if (path === "/admin/members") return viewMembers();
+  if ((m = path.match(/^\/admin\/members\/(\d+)$/))) return viewMember(m[1]);
+  if (path === "/admin/companies") return viewCompanies();
+  if (path === "/admin/schools") return viewSchools();
+  if (path === "/admin/recruitments") return viewRecruitments();
+  if (path === "/admin/jobs") return viewAdminJobs();
+  if ((m = path.match(/^\/admin\/jobs\/(\d+)$/))) return viewAdminJob(m[1]);
+  if (path === "/admin/applications") return viewAdminApps();
+  return redirect("#/");
+}
+
+function render() {
+  var h = parseHash();
+  pendingRedirect = null;
+  var html = route(h.path, h.q);
+  if (html === null) { location.replace(pendingRedirect || "#/"); return; }
+  document.getElementById("app").innerHTML = html;
+  if (pendingScroll) {
+    var el = document.getElementById(pendingScroll);
+    pendingScroll = null;
+    if (el) el.scrollIntoView();
+  } else if (lastPath !== h.path) window.scrollTo(0, 0);
+  lastPath = h.path;
+}
+
+function loginMember(email) {
+  email = String(email || "").trim().toLowerCase();
+  var ind = S.individuals.find(function (i) { return i.email.toLowerCase() === email; });
+  var co = S.companies.find(function (c) { return c.email.toLowerCase() === email; });
+  if (!ind && !co) return false;
+  S.member = ind ? { kind: "individual", id: ind.id } : { kind: "company", id: co.id };
+  save();
+  go(ind ? "#/mypage" : "#/employer/jobs");
+  return true;
+}
+
+var ACT = {
+  nav: function (d) { go(d.to); },
+  scroll: function (d) { pendingScroll = d.to; go("#/"); },
+  track: function (d) { filters = { category: d.track, industry: "", type: "", loc: "", salary: "" }; go(me() && S.member.kind === "individual" ? "#/mypage" : "#/login"); },
+  quick: function (d) {
+    if (d.as === "admin") { S.staff = "admin"; save(); go("#/admin"); }
+    else loginMember(d.as === "company" ? "hr@example-kensetsu.co.jp" : "akram@example.com");
+  },
+  reset: function () {
+    if (!confirm("デモのデータを初期状態に戻します。よろしいですか？")) return;
+    try { localStorage.removeItem(KEY); } catch (e) { /* nothing stored */ }
+    S = seed(); save();
+    say("デモを初期状態に戻しました。");
+    go("#/");
+  },
+  logout: function () { S.member = null; save(); say("ログアウトしました。"); go("#/login"); },
+  staffLogout: function () { S.staff = null; save(); go("#/admin/login"); },
+  loginAs: function (d) { loginMember(d.email); },
+  staffAs: function (d) { S.staff = d.key; save(); go("#/admin"); },
+  print: function () { window.print(); },
+  period: function (d) { S.period = d.p; save(); render(); },
+  apply: function (d) {
+    var ind = me(), job = byId(S.jobs, d.id);
+    if (!ind || !job) return;
+    if (ind.review === "draft") { say("応募の前にプロフィールを提出してください。", true); render(); return; }
+    if (S.applications.some(function (a) { return a.iid === ind.id && a.jid === job.id; })) return;
+    S.applications.push({ id: nextId(S.applications), iid: ind.id, jid: job.id, status: "new", review: "pending", reason: "", created: today() });
+    save();
+    say("「" + job.type + "」に応募しました。スタッフが内容を確認し、企業におつなぎします。");
+    render();
+    window.scrollTo(0, 0);
+  },
+  addRow: function (d, el) {
+    var form = el.closest("form"), ind = me(), st = collectStep(form, ind);
+    ind[st.rows].push({ _new: true });
+    // An empty row would be dropped on collect, so keep the count explicit.
+    save(); render();
+  },
+  delRow: function (d, el) {
+    var form = el.closest("form"), ind = me(), st = STEPS.find(function (s) { return s.slug === form.dataset.slug; });
+    var fd = new FormData(form), out = [];
+    for (var i = 0; i < Number(form.dataset.count); i++) {
+      if (i === Number(d.i)) continue;
+      var row = {};
+      st.fields.forEach(function (f) { row[f.n] = String(fd.get(f.n + "__" + i) || "").trim(); });
+      out.push(row);
+    }
+    ind[st.rows] = out; save(); render();
+  },
+  review: function (d) {
+    if (!canEdit()) return;
+    var ok = d.ok === "1", list = d.kind === "job" ? S.jobs : d.kind === "candidate" ? S.individuals : S.applications;
+    var x = byId(list, d.id);
+    if (!x) return;
+    var reason = "";
+    if (!ok) {
+      reason = prompt("差戻しの理由を入力してください（本人の画面に表示されます）", "");
+      if (reason === null) return;
+    }
+    x.review = ok ? "approved" : "rejected";
+    x.reason = reason.trim();
+    save();
+    var what = { job: "求人", candidate: "プロフィール", application: "応募" }[d.kind];
+    say(what + "を" + (ok ? "承認しました。" : "差戻しました。"), !ok);
+    render();
+  },
+  toggleJob: function (d) {
+    if (!canEdit()) return;
+    var j = byId(S.jobs, d.id);
+    j.active = !j.active; save();
+    say(j.active ? "掲載を再開しました。" : "掲載を停止しました。");
+    render();
+  }
+};
+
+var FORM = {
+  login: function (fd) {
+    if (fd.get("password") !== DEMO_PASSWORD || !loginMember(fd.get("email"))) { say("メールアドレスまたはパスワードが正しくありません。", true); render(); }
+  },
+  staffLogin: function (fd) {
+    var st = STAFF[String(fd.get("email") || "").trim().toLowerCase()];
+    if (!st || fd.get("password") !== DEMO_PASSWORD) { say("ログインIDまたはパスワードが正しくありません。", true); render(); return; }
+    S.staff = st.key; save(); go("#/admin");
+  },
+  register: function (fd, form) {
+    var email = String(fd.get("email") || "").trim().toLowerCase(), name = String(fd.get("name") || "").trim();
+    var taken = S.individuals.concat(S.companies).some(function (x) { return x.email.toLowerCase() === email; }) || STAFF[email];
+    if (taken) { say("このメールアドレスは既に登録されています。", true); render(); return; }
+    if (form.dataset.kind === "corporate") {
+      var cid = nextId(S.companies);
+      S.companies.push({ id: cid, no: "2026100001" + String(cid).padStart(2, "0"), email: email, name: name, rep: "", headcount: "", industry: String(fd.get("industry") || ""), pref: "", city: "", contact: "", founded: "", url: "", intro: "", created: today() });
+      S.member = { kind: "company", id: cid }; save();
+      say("法人会員登録が完了しました。会社情報を入力してください。");
+      go("#/employer");
+    } else {
+      var iid = nextId(S.individuals);
+      S.individuals.push({ id: iid, no: "1026100001" + String(iid).padStart(2, "0"), email: email, name: name, kana: "", gender: "", birth: "", nationality: "", residence: "", lang: "", hasSpouse: "", hasChildren: "", mobile: "", visa: "", visaExpiry: "", intro: "", strengths: "", motivation: "", hobbies: "", goals: [], languages: [], education: [], work: [], review: "draft", reason: "", resumeFile: "", submitted: "", created: today() });
+      S.member = { kind: "individual", id: iid }; save();
+      say("会員登録が完了しました。プロフィールを入力してください。");
+      go("#/profile/basic");
+    }
+  },
+  wizard: function (fd, form) {
+    var ind = me(), st = collectStep(form, ind), idx = STEPS.indexOf(st);
+    if (st.slug === "basic" && (!ind.name || !ind.gender || !ind.birth)) { save(); say("氏名・性別・生年月日を入力してください。", true); render(); return; }
+    if (st.slug === "confirm") {
+      if (!ind.name || !ind.gender || !ind.birth) { say("基本情報（氏名・性別・生年月日）が未入力です。", true); go("#/profile/basic"); return; }
+      ind.review = "pending"; ind.reason = ""; ind.submitted = today(); save();
+      say("プロフィールを提出しました。スタッフの審査をお待ちください。");
+      go("#/mypage");
+      return;
+    }
+    save();
+    go("#/profile/" + STEPS[idx + 1].slug);
+  },
+  company: function (fd) {
+    var c = me();
+    ["name", "rep", "founded", "headcount", "industry", "pref", "city", "contact", "url", "intro"].forEach(function (k) { c[k] = String(fd.get(k) || "").trim(); });
+    if (!c.name) c.name = "（名称未設定）";
+    save(); say("会社情報を保存しました。"); render(); window.scrollTo(0, 0);
+  },
+  job: function (fd) {
+    var c = me(), g = function (k) { return String(fd.get(k) || "").trim(); };
+    var no = S.jobs.filter(function (j) { return j.cid === c.id; }).reduce(function (m, j) { return Math.max(m, j.no); }, 0) + 1;
+    S.jobs.push({ id: nextId(S.jobs), cid: c.id, no: no, track: g("track"), industry: g("industry"), type: g("type"), work: g("work"), emp: g("emp"), desc: g("desc"), loc: g("loc"), from: g("from"), to: g("to"), holidays: g("holidays"), salary: g("salary") ? Number(g("salary")) : null, features: g("features"), active: true, review: "pending", reason: "", created: today() });
+    save();
+    say("求人を登録しました。スタッフの審査後にサイトへ掲載されます。");
+    go("#/employer/jobs");
+  }
+};
+
+document.addEventListener("click", function (e) {
+  var el = e.target.closest("[data-act]");
+  if (!el || el.disabled) return;
+  e.preventDefault();
+  ACT[el.dataset.act](el.dataset, el);
+});
+document.addEventListener("submit", function (e) {
+  var form = e.target.closest("form[data-form]");
+  if (!form) return;
+  e.preventDefault();
+  FORM[form.dataset.form](new FormData(form), form);
+});
+document.addEventListener("input", function (e) {
+  var k = e.target.dataset && e.target.dataset.filter;
+  if (!k) return;
+  filters[k] = e.target.value;
+  var box = document.getElementById("results");
+  if (box && me()) box.innerHTML = jobResults(me());
+});
+document.addEventListener("change", function (e) {
+  var k = e.target.dataset && e.target.dataset.change;
+  if (k === "resume") {
+    var f = e.target.files && e.target.files[0];
+    if (!f) return;
+    me().resumeFile = f.name; save();
+    say("履歴書ファイル「" + f.name + "」を登録しました。"); render(); window.scrollTo(0, 0);
+  } else if (k === "appStatus") {
+    if (!canEdit()) return;
+    byId(S.applications, e.target.dataset.id).status = e.target.value; save();
+    say("対応状況を更新しました。"); render();
+  }
+});
+window.addEventListener("hashchange", render);
+render();
+</script>
+</body>
+</html>
