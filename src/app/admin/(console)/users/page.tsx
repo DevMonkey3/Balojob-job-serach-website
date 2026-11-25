@@ -1,9 +1,9 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { PencilIcon, PlusIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminLink } from "@/components/admin/admin-path";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { Flash } from "@/components/admin/flash";
 import { PageHeader } from "@/components/admin/page-header";
@@ -19,15 +19,14 @@ export default function UsersPage({ searchParams }: { searchParams: Promise<Sear
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        screenId="BHALO810"
         title="ユーザ一覧"
         titleEn="Staff users"
         description="管理画面にログインできるスタッフ。Administratorだけが操作できます。"
       >
-        <Link href="/admin/users/new" className={buttonVariants()}>
+        <AdminLink href="/users/new" className={buttonVariants()}>
           <PlusIcon />
           新規ユーザの追加
-        </Link>
+        </AdminLink>
       </PageHeader>
       <Suspense fallback={<TableSkeleton />}>
         <UsersList searchParams={searchParams} />
@@ -81,10 +80,10 @@ async function UsersList({ searchParams }: { searchParams: Promise<SearchParams>
                 <TableCell className="tabular-nums">{fmtDateTime(u.lastLoginAt)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
-                    <Link href={`/admin/users/${u.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                    <AdminLink href={`/users/${u.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
                       <PencilIcon />
                       編集
-                    </Link>
+                    </AdminLink>
                     {u.id !== staff.id && (
                       <DeleteButton action={deleteStaffUserAction} id={u.id} message="このユーザを削除します。よろしいですか？" />
                     )}

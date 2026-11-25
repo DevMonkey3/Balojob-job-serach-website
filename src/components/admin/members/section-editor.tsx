@@ -74,7 +74,7 @@ function RowsEditor({ individualId, section, rows, options }: Props) {
       <FormShell action={saveMemberSectionAction} confirmEmpty={false} submitLabel={`${section.title}を保存`}>
         <HiddenField name="individualId" value={individualId} />
         <HiddenField name="section" value={section.key} />
-        <FieldGroup title={section.title} screenId={section.screenId} description={section.description}>
+        <FieldGroup title={section.title} description={section.description}>
           <div className="sm:col-span-2">
             <Table>
               <TableHeader>

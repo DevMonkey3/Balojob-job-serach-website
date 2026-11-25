@@ -33,8 +33,9 @@ type Props = {
   /** Noun in the confirmation: この{targetLabel}を承認します… */
   targetLabel: string;
   /**
-   * Console path to show afterwards, without the result flag; `saved=approved`
-   * or `saved=rejected` is appended. Omitted: /admin/reviews.
+   * Page to show afterwards, as a path inside the console ("/jobs/12"), without
+   * the result flag; `saved=approved` or `saved=rejected` is appended.
+   * Omitted: the review queue.
    */
   redirectTo?: string;
   size?: "xs" | "sm" | "default";

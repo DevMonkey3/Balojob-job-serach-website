@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "法人会員登録" };
 
 export default function CorporateRegisterPage() {
   return (
-    <div className="flex flex-1 items-center justify-center px-4 py-16">
+    <div className="flex flex-1 items-start justify-center bg-page px-4 py-10 md:py-16">
       <Suspense fallback={<div className="h-[36rem] w-full max-w-md animate-pulse rounded-xl bg-muted" aria-busy="true" />}>
         <Gate />
       </Suspense>

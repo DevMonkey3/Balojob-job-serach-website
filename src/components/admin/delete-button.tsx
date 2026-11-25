@@ -33,7 +33,7 @@ export function DeleteButton({
   label?: string;
   size?: "xs" | "sm" | "default";
   variant?: "ghost" | "outline" | "destructive";
-  /** On edit pages: the list to show after deleting (the action reads it via redirectTarget). */
+  /** On edit pages: the list to show after deleting, as a path inside the console ("/jobs"). The action reads it via redirectTarget. */
   redirectTo?: string;
 }) {
   const [open, setOpen] = useState(false);

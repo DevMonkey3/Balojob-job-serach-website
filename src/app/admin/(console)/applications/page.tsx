@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { EyeIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminLink } from "@/components/admin/admin-path";
 import { ApplicationStatusBadge } from "@/components/admin/applications/status-badge";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { SelectField, TextField } from "@/components/admin/fields";
@@ -23,7 +23,6 @@ export default function ApplicationsPage({ searchParams }: { searchParams: Promi
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        screenId="BHALO200"
         title="コンタクト申込一覧"
         titleEn="Contact requests"
         description="個人会員がマイページから申し込んだ企業・学校へのコンタクト依頼。"
@@ -52,7 +51,7 @@ async function ApplicationsList({ searchParams }: { searchParams: Promise<Search
     <>
       <Flash saved={param(sp, "saved")} />
 
-      <SearchForm clearHref="/admin/applications">
+      <SearchForm clearHref="/applications">
         <SelectField name="status" label="ステータス" options={toOptions(applicationStatusLabels)} defaultValue={filters.status} placeholder="すべて" />
         <TextField name="member" label="会員（氏名・会員番号）" defaultValue={filters.member} />
         <TextField name="target" label="申込先（企業・学校名）" defaultValue={filters.target} />
@@ -81,9 +80,9 @@ async function ApplicationsList({ searchParams }: { searchParams: Promise<Search
                 <TableCell className="text-right tabular-nums">{a.id}</TableCell>
                 <TableCell>{fmtDateTime(a.createdAt)}</TableCell>
                 <TableCell className="font-mono text-xs">
-                  <Link href={`/admin/members/${a.individual.id}`} className="text-primary hover:underline">
+                  <AdminLink href={`/members/${a.individual.id}`} className="text-primary hover:underline">
                     {a.individual.memberNo}
-                  </Link>
+                  </AdminLink>
                 </TableCell>
                 <TableCell>{a.individual.fullName}</TableCell>
                 <TableCell className="max-w-80 truncate whitespace-normal">
@@ -99,10 +98,10 @@ async function ApplicationsList({ searchParams }: { searchParams: Promise<Search
                 <TableCell>{fmtDateTime(a.updatedAt)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
-                    <Link href={`/admin/applications/${a.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                    <AdminLink href={`/applications/${a.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
                       <EyeIcon />
                       詳細
-                    </Link>
+                    </AdminLink>
                     {canDelete && (
                       <DeleteButton action={deleteApplicationAction} id={a.id} message="このコンタクト申込を削除します。よろしいですか？" />
                     )}
@@ -115,7 +114,7 @@ async function ApplicationsList({ searchParams }: { searchParams: Promise<Search
       </div>
 
       <Pagination
-        pathname="/admin/applications"
+        pathname="/applications"
         searchParams={sp}
         page={page}
         pageCount={pageCount}

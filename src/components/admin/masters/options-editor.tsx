@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { AdminLink } from "@/components/admin/admin-path";
 import { HiddenField } from "@/components/admin/fields";
 import { FormShell } from "@/components/admin/form-shell";
 import { RowsEditor, type EditorColumn, type EditorRow } from "@/components/admin/masters/rows-editor";
@@ -45,12 +45,12 @@ export function OptionsEditor({ category, parentId, rows }: { category: string; 
                 label: "レベル2",
                 render: (row) =>
                   row.id ? (
-                    <Link
-                      href={`/admin/masters/options?category=${category}&parent=${row.id}`}
+                    <AdminLink
+                      href={`/masters/options?category=${category}&parent=${row.id}`}
                       className="text-primary hover:underline"
                     >
                       レベル2 (子項目) {row.childCount}
-                    </Link>
+                    </AdminLink>
                   ) : (
                     <span className="text-xs text-muted-foreground">更新後に編集できます</span>
                   ),

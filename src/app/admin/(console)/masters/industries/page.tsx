@@ -12,7 +12,6 @@ export default function IndustriesPage({ searchParams }: { searchParams: Promise
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        screenId="BHALO815"
         title="人気業種マスタメンテ"
         titleEn="Popular industries"
         description="トップページの「人気の業種」に表示する業種。表示順の小さい順に並びます。"

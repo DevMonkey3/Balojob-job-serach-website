@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { EyeIcon, FileTextIcon, PencilIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminLink } from "@/components/admin/admin-path";
 import { ReviewActions } from "@/components/admin/reviews/review-actions";
 import { queueHref } from "@/components/admin/reviews/queue-tabs";
 import { EmptyRow, Mark } from "@/components/admin/status";
@@ -46,9 +46,9 @@ export function JobsQueue({ rows }: { rows: PendingJobRow[] }) {
           <TableRow key={j.id}>
             <TableCell className="tabular-nums">{fmtDateTime(j.submittedAt)}</TableCell>
             <TableCell className="font-mono text-xs">
-              <Link href={`/admin/companies/${j.corporationId}`} className={link}>
+              <AdminLink href={`/companies/${j.corporationId}`} className={link}>
                 {j.memberNo}
-              </Link>
+              </AdminLink>
             </TableCell>
             <TableCell>{j.company}</TableCell>
             <TableCell className="text-right tabular-nums">{j.jobNo}</TableCell>
@@ -60,10 +60,10 @@ export function JobsQueue({ rows }: { rows: PendingJobRow[] }) {
             <TableCell className="text-right tabular-nums">{fmtNumber(j.monthlySalary)}</TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">
-                <Link href={`/admin/jobs/${j.id}`} className={actionLink}>
+                <AdminLink href={`/jobs/${j.id}`} className={actionLink}>
                   <PencilIcon />
                   編集
-                </Link>
+                </AdminLink>
                 <ReviewActions target="job" id={j.id} targetLabel="求人" redirectTo={queueHref("jobs")} />
               </div>
             </TableCell>
@@ -95,9 +95,9 @@ export function CandidatesQueue({ rows }: { rows: PendingCandidateRow[] }) {
             <TableCell className="tabular-nums">{fmtDateTime(c.submittedAt)}</TableCell>
             <TableCell className="font-mono text-xs">{c.memberNo}</TableCell>
             <TableCell>
-              <Link href={`/admin/reviews/candidates/${c.id}`} className={link}>
+              <AdminLink href={`/reviews/candidates/${c.id}`} className={link}>
                 {c.fullName}
-              </Link>
+              </AdminLink>
             </TableCell>
             <TableCell>{c.nationality}</TableCell>
             <TableCell>
@@ -114,14 +114,14 @@ export function CandidatesQueue({ rows }: { rows: PendingCandidateRow[] }) {
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">
-                <Link href={`/admin/reviews/candidates/${c.id}`} className={actionLink}>
+                <AdminLink href={`/reviews/candidates/${c.id}`} className={actionLink}>
                   <FileTextIcon />
                   履歴書
-                </Link>
-                <Link href={`/admin/members/${c.id}`} className={actionLink}>
+                </AdminLink>
+                <AdminLink href={`/members/${c.id}`} className={actionLink}>
                   <PencilIcon />
                   編集
-                </Link>
+                </AdminLink>
                 <ReviewActions target="candidate" id={c.id} targetLabel="候補者プロフィール" redirectTo={queueHref("candidates")} />
               </div>
             </TableCell>
@@ -151,9 +151,9 @@ export function ApplicationsQueue({ rows }: { rows: PendingApplicationRow[] }) {
           <TableRow key={a.id}>
             <TableCell className="tabular-nums">{fmtDateTime(a.submittedAt)}</TableCell>
             <TableCell>
-              <Link href={`/admin/reviews/candidates/${a.individual.id}`} className={link}>
+              <AdminLink href={`/reviews/candidates/${a.individual.id}`} className={link}>
                 {a.individual.fullName}
-              </Link>
+              </AdminLink>
             </TableCell>
             <TableCell className="font-mono text-xs">{a.individual.memberNo}</TableCell>
             <TableCell>
@@ -161,19 +161,19 @@ export function ApplicationsQueue({ rows }: { rows: PendingApplicationRow[] }) {
             </TableCell>
             <TableCell className="max-w-80 truncate whitespace-normal">
               {a.job ? (
-                <Link href={`/admin/jobs/${a.job.id}`} className={link}>
+                <AdminLink href={`/jobs/${a.job.id}`} className={link}>
                   {a.job.company} / {a.job.jobType} <span className="font-mono text-xs">#{a.job.jobNo}</span>
-                </Link>
+                </AdminLink>
               ) : (
                 <span className="text-muted-foreground">{a.targetLabel || "—"}</span>
               )}
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">
-                <Link href={`/admin/applications/${a.id}`} className={actionLink}>
+                <AdminLink href={`/applications/${a.id}`} className={actionLink}>
                   <EyeIcon />
                   詳細
-                </Link>
+                </AdminLink>
                 <ReviewActions target="application" id={a.id} targetLabel="応募" redirectTo={queueHref("applications")} />
               </div>
             </TableCell>

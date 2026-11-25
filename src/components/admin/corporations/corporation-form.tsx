@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminPath } from "@/components/admin/admin-path";
 import {
   CheckboxField,
   FieldGroup,
@@ -22,25 +23,26 @@ export type CorporationFormOptions = { industries: string[] };
 export type CorporationFormVariant = "admin" | "employer";
 
 // Wording that differs between BHALO804 (企業) and BHALO808 (学校). The
-// fields come from the member-registration screens 110–114 / 151–154.
+// fields come from the member-registration screens 110–114 / 151–154:
+// 基本情報1 = BHALO111 / 151, 基本情報2 = BHALO112 / 152, ロゴ・紹介文 =
+// BHALO113・114 / 153・154, 対象種別 = BHALO110.
+// `list` is the list screen's path inside the console.
 const wording = {
   company: {
-    list: "/admin/companies",
+    list: "/companies",
     name: "会社名",
     founded: "創業",
     headcount: "従業員数",
     introduction: "企業紹介文",
     basic: "企業基本情報",
-    screens: ["BHALO111", "BHALO112", "BHALO113・114"],
   },
   school: {
-    list: "/admin/schools",
+    list: "/schools",
     name: "学校名",
     founded: "創立",
     headcount: "生徒数",
     introduction: "学校紹介文",
     basic: "学校基本情報",
-    screens: ["BHALO151", "BHALO152", "BHALO153・154"],
   },
 } as const;
 
@@ -65,18 +67,19 @@ export function CorporationForm({
   cancelHref?: string;
   variant?: CorporationFormVariant;
 }) {
+  const admin = useAdminPath();
   const t = wording[kind];
   const isCompany = kind === "company";
   const employer = variant === "employer";
   return (
     <FormShell
       action={action ?? (isCompany ? saveCompanyAction : saveSchoolAction)}
-      cancelHref={cancelHref ?? (employer ? undefined : t.list)}
+      cancelHref={cancelHref ?? (employer ? undefined : admin(t.list))}
       submitLabel={employer ? "保存" : c ? "更新" : "登録"}
     >
       {c && !employer && <HiddenField name="id" value={c.id} />}
 
-      <FieldGroup title={`${t.basic}1`} screenId={t.screens[0]}>
+      <FieldGroup title={`${t.basic}1`}>
         {c && (
           <>
             <TextField name="_memberNo" label="法人会員番号" defaultValue={c.memberNo} readOnly />
@@ -123,9 +126,16 @@ export function CorporationForm({
           <TextField name="industry" label="業種" list={options?.industries ?? []} defaultValue={c?.industry} maxLength={120} />
         )}
         <TextField name="url" label="URL" type="url" defaultValue={c?.url} maxLength={200} placeholder="https://" />
+        <TextField
+          name="licenseNo"
+          label="許可・登録番号"
+          defaultValue={c?.licenseNo}
+          maxLength={100}
+          hint="有料職業紹介・監理団体・登録支援機関などの番号。求人ページに企業名と一緒に表示されます。"
+        />
       </FieldGroup>
 
-      <FieldGroup title={`${t.basic}2`} screenId={t.screens[1]}>
+      <FieldGroup title={`${t.basic}2`}>
         <TextField name="postalCode" label="郵便番号" defaultValue={c?.postalCode} maxLength={20} />
         <TextField name="prefecture" label="県" defaultValue={c?.prefecture} maxLength={50} />
         <TextField name="city" label="市区郡" defaultValue={c?.city} maxLength={50} />
@@ -136,7 +146,7 @@ export function CorporationForm({
         <TextField name="contactEmail" label="メールアドレス" type="email" defaultValue={c?.contactEmail} maxLength={254} />
       </FieldGroup>
 
-      <FieldGroup title="ロゴ・紹介文" screenId={t.screens[2]}>
+      <FieldGroup title="ロゴ・紹介文">
         <div className="flex flex-col gap-1.5 sm:col-span-2">
           <Label>ロゴ</Label>
           <p className="rounded-lg border border-dashed px-3 py-2 text-sm text-muted-foreground">
@@ -146,7 +156,7 @@ export function CorporationForm({
         <TextareaField name="introduction" label={t.introduction} defaultValue={c?.introduction} rows={6} maxLength={4000} span={2} />
       </FieldGroup>
 
-      <FieldGroup title="対象種別" screenId="BHALO110">
+      <FieldGroup title="対象種別">
         {/* The action reports "none checked" on the first checkbox's name. */}
         <FieldWrap name={isCompany ? "isCompany" : "isUniversity"} label="対象種別" required hint="1つ以上選択してください。" span={2}>
           <div className="flex flex-wrap gap-x-6">

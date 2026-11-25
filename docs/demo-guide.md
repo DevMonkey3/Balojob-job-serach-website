@@ -20,7 +20,7 @@ What exists today, how to show it in about 15 minutes, and what to say about the
    ```bash
    npm run dev
    ```
-   Open http://localhost:3000. The admin console is http://localhost:3000/admin. All demo logins (staff, candidates, employers) are in `DEMO-LOGIN.txt` next to this project (also at the top of `db/sample-data.sql`).
+   Open http://localhost:3000. The staff console is at http://localhost:3000/<ADMIN_PATH>, where `ADMIN_PATH` is the value in `.env.local` (http://localhost:3000/admin only when that value is empty). All demo logins (staff, candidates, employers) are in `DEMO-LOGIN.txt` next to this project (also at the top of `db/sample-data.sql`).
 5. Use a window at least 1,024 px wide so the console's side menu is visible. For the candidate and employer parts, use a second browser window or a private window: one browser profile holds one member login at a time (the staff login is separate and can stay open).
 
 The demo data is fictional: 7 companies with 10 job postings, 4 schools with 6 recruitments, 6 candidates from Bangladesh, the Philippines, Myanmar and Vietnam, and 4 contact requests. One job, one candidate profile and two applications start out waiting for staff approval so the queues are not empty.
@@ -33,13 +33,13 @@ Nothing reaches the other side without staff approval: an employer's job is publ
 
 | Minute | Show | Say |
 |---|---|---|
-| 0–2 | **Top page** `/` | Three visa tracks with live counts of approved postings, popular industries. Everything comes from the database. |
+| 0–2 | **Top page** `/` | Search bar, newest jobs, the three visa tracks (技人国 / 特定技能 / 育成就労) with live counts of approved postings, industries and locations. Everything comes from the database. |
 | 2–4 | **Candidate** — log in as the approved candidate (`akram@example.com`) → `/mypage` | Greeting, profile review status, résumé file upload, job search over approved jobs only, 応募する on a job, the 応募状況 list showing 審査中. |
 | 4–5 | **Candidate's 履歴書** — プロフィール変更・確認 → `/profile/basic` | The 17-step wizard from the design documents, now saved to the database step by step (change a value, press 次へ, reload: it stays). |
-| 5–7 | **Staff** — `/admin` as the Administrator → 審査待ち tiles → `/admin/reviews` | Three queues: jobs, candidate profiles, applications. Open the candidate's 履歴書 from the queue, then approve the application. Show a 差戻し with a reason on the pending profile. |
-| 7–9 | **Employer** — log in as `hr@example-kensetsu.co.jp` → `/employer/jobs` → the job with 承認済応募者 1名 | The approved applicant appears under the job: open 履歴書を見る — full Japanese résumé, contact details, the uploaded file. Nothing shows for applications staff have not approved. |
+| 5–7 | **Staff** — the staff console as the Administrator → 審査待ち tiles → 審査待ち一覧 | Three queues: jobs, candidate profiles, applications. Open the candidate's 履歴書 from the queue, then approve the application. Show a 差戻し with a reason on the pending profile. |
+| 7–9 | **Employer** — log in as `hr@example-kensetsu.co.jp` → `/employer/jobs` → the job with 承認済応募者 1名 | The approved applicant appears under the job: open 履歴書を見る — the full Japanese résumé without contact details or the uploaded file (introductions go through staff). Nothing shows for applications staff have not approved. |
 | 9–10 | **Employer posts a job** — 新規求人 → fill a few fields → 審査に出す | Status 審査中 on the employer's list; it is not on the top page yet. |
-| 10–11 | **Staff approves the job** — `/admin/reviews?tab=jobs` → 承認 | Reload the top page: the count went up; the job is now in the candidate's search. |
+| 10–11 | **Staff approves the job** — 審査待ち一覧 → 求人 tab → 承認 | Reload the top page: the count went up; the job is now in the candidate's search. |
 | 11–12 | **Rejected candidate** — log in as `najmul@example.com` | My Page shows 差戻し with the reason staff typed and a 修正して再申請 button. |
 | 12–14 | **Admin console tour** (optional) | Members, companies, jobs with the new 審査 column and filter; staff users with permissions; masters. Log in as the view-only user to show permissions. |
 | 14–15 | **What's next** | See talking points. |

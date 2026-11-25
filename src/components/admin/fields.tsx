@@ -256,23 +256,18 @@ export function HiddenField({ name, value }: { name: string; value: string | num
 /** A titled block of fields in two columns. */
 export function FieldGroup({
   title,
-  screenId,
   description,
   children,
   className,
 }: {
   title: string;
-  screenId?: string;
   description?: string;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
     <fieldset className={cn("rounded-xl border bg-background p-5", className)}>
-      <legend className="flex items-center gap-2 px-1 text-sm font-semibold">
-        {title}
-        {screenId && <span className="font-mono text-xs font-normal text-muted-foreground">{screenId}</span>}
-      </legend>
+      <legend className="px-1 text-sm font-semibold">{title}</legend>
       {description && <p className="mb-4 text-xs text-muted-foreground">{description}</p>}
       <div className="grid gap-4 sm:grid-cols-2">{children}</div>
     </fieldset>

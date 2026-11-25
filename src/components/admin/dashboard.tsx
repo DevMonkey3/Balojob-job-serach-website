@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { BriefcaseIcon, Building2Icon, FileTextIcon, GraduationCapIcon, InboxIcon, UsersIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminLink } from "@/components/admin/admin-path";
 import { cn } from "@/lib/utils";
 import type { DashboardData } from "@/server/dashboard";
 import type { PendingCounts } from "@/server/admin/reviews";
@@ -20,7 +20,7 @@ const periods = [
 
 type Period = (typeof periods)[number][0];
 
-// 審査待ち tiles: one per review queue, linking to its tab on /admin/reviews.
+// 審査待ち tiles: one per review queue, linking to its tab on the console's /reviews page.
 const pendingTiles: { key: keyof PendingCounts; label: string; icon: typeof BriefcaseIcon }[] = [
   { key: "jobs", label: "求人", icon: BriefcaseIcon },
   { key: "candidates", label: "候補者プロフィール", icon: FileTextIcon },
@@ -50,10 +50,7 @@ export function Dashboard({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-mono text-xs text-muted-foreground">BHALO800</p>
-          <h1 className="text-2xl font-bold">こんにちは、{staffName}さん</h1>
-        </div>
+        <h1 className="text-2xl font-bold">こんにちは、{staffName}さん</h1>
         <div role="group" aria-label="集計期間" className="inline-flex rounded-lg border bg-background p-1">
           {periods.map(([key, label]) => (
             <button
@@ -80,9 +77,9 @@ export function Dashboard({
             const n = pending[t.key];
             const hot = n > 0;
             return (
-              <Link
+              <AdminLink
                 key={t.key}
-                href={`/admin/reviews?tab=${t.key}`}
+                href={`/reviews?tab=${t.key}`}
                 aria-label={`審査待ちの${t.label} ${n.toLocaleString("ja-JP")}件`}
                 className={cn(
                   "flex items-center gap-4 rounded-xl border bg-card p-6 text-card-foreground transition-colors hover:bg-muted/50",
@@ -104,7 +101,7 @@ export function Dashboard({
                     <span className="ml-1 text-sm font-normal">件</span>
                   </p>
                 </div>
-              </Link>
+              </AdminLink>
             );
           })}
         </div>
@@ -146,9 +143,9 @@ export function Dashboard({
                 {recentMembers.map((m) => (
                   <TableRow key={m.no}>
                     <TableCell className="font-mono text-xs">
-                      <Link href={`/admin/members/${m.id}`} className="text-primary hover:underline">
+                      <AdminLink href={`/members/${m.id}`} className="text-primary hover:underline">
                         {m.no}
-                      </Link>
+                      </AdminLink>
                     </TableCell>
                     <TableCell>{m.name}</TableCell>
                     <TableCell>
@@ -187,9 +184,9 @@ export function Dashboard({
                 {recentJobs.map((j) => (
                   <TableRow key={j.id}>
                     <TableCell className="font-mono text-xs">
-                      <Link href={`/admin/jobs/${j.id}`} className="text-primary hover:underline">
+                      <AdminLink href={`/jobs/${j.id}`} className="text-primary hover:underline">
                         {j.corporateNo}
-                      </Link>
+                      </AdminLink>
                     </TableCell>
                     <TableCell>{j.company}</TableCell>
                     <TableCell>

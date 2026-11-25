@@ -2,13 +2,13 @@
 
 A job and school matching site run by ジャパンバングラブリッジ株式会社 (Japan Bangla Bridge). It connects foreign candidates with Japanese employers (技人国・特定技能・技能実習) and schools (大学・専門学校・日本語学校).
 
-The screens follow the design documents in `bhalojob設計書関連` (詳細設計書 BHALO###). Each screen shows its screen ID in small grey text so you can find the matching spec.
+The screens follow the design documents in `bhalojob設計書関連` (詳細設計書 BHALO###). The screen IDs are not shown on the site; they remain in code comments and in the tables below so a screen can be matched to its spec.
 
 ## Status
 
-Admin-mediated MVP (2026-10-19): candidates and employers register and log in; the 17-step 履歴書 wizard saves to the database; candidates upload a résumé file and apply to jobs; employers post jobs; staff approve jobs, profiles and applications on `/admin/reviews`; only approved jobs are public and only approved applications reach the employer's page. No payment and no email yet. Schools' registration is hidden (準備中).
+Admin-mediated MVP (2026-10-19): candidates and employers register and log in; the 17-step 履歴書 wizard saves to the database; candidates upload a résumé file and apply to jobs; employers post jobs; staff approve jobs, profiles and applications in the staff console (審査待ち一覧); only approved jobs are public and only approved applications reach the employer's page. No payment and no email yet. Schools' registration is hidden (準備中).
 
-Admin console (`/admin`): staff login with permissions, and add / edit / delete screens for every table (jobs, companies, schools, recruitments, members with all profile sections, contact requests, staff users, and the five master screens). See **[docs/admin-console.md](docs/admin-console.md)**. This is the way to put test data into the database today.
+Staff console (at the secret address `/<ADMIN_PATH>`, never linked from the public site): staff login with permissions, and add / edit / delete screens for every table (jobs, companies, schools, recruitments, members with all profile sections, contact requests, staff users, and the five master screens). See **[docs/admin-console.md](docs/admin-console.md)**. This is the way to put test data into the database today.
 
 ## Run locally
 
@@ -40,7 +40,9 @@ Open http://localhost:3000.
 | URL | Screen | Spec |
 |---|---|---|
 | `/` | Top page with member registration | BHALO000 |
-| `/login` | Member login + password change | BHALO001 |
+| `/login` | Login for candidates and companies (`?as=employer` shows the company tab) | BHALO001 |
+| `/jobs`, `/jobs/[id]` | 求人検索 (filters in the URL) and a job's page with 応募する. Shows the company name and 許可・登録番号 only | BHALO200 |
+| `/schools` | 学校を探す: recruiting schools and their courses | — |
 | `/register`, `/register/individual`, `/register/corporate` | Create a login | BHALO000, 002, 003 |
 | `/profile/[step]` | Individual profile, 17 steps | BHALO010–026 |
 | `/corporate/target` | Organisation type | BHALO110 |
@@ -49,8 +51,8 @@ Open http://localhost:3000.
 | `/mypage` | Candidate My Page: review status, résumé upload, job search over approved jobs, apply, 応募状況 | BHALO200 |
 | `/employer`, `/employer/jobs`, `/employer/jobs/new`, `/employer/jobs/[id]`, `/employer/applicants/[id]` | Employer: company info, jobs (pending until staff approve), approved applicants with their 履歴書 | BHALO111–116 (MVP) |
 | `/logout` | Member logout | — |
-| `/admin/login` | Staff login (creates the first Administrator on an empty database) | — |
-| `/admin` and below | Admin console: dashboard, lists, add/edit screens, masters, and the 審査 queues (`/admin/reviews`) — see docs/admin-console.md | BHALO800–816 |
+| `/<ADMIN_PATH>/login` | Staff login (creates the first Administrator on an empty database). `/admin` itself answers 404 | — |
+| `/<ADMIN_PATH>` and below | Staff console: dashboard, lists, add/edit screens, masters, and the 審査 queues — see docs/admin-console.md | BHALO800–816 |
 
 ## Database
 
@@ -81,7 +83,6 @@ The site is built to stay quick on a cheap VPS: every page has a static shell (P
 ```
 src/
   app/(site)/        public site, registration, wizard, My Page
-  app/admin/         admin console (not protected yet)
   components/ui/     shadcn/ui components (Base UI)
   components/wizard/ step engine: field renderer, step screen, draft state
   lib/flows/         step definitions for each wizard (fields, validation, skip rules)
@@ -100,3 +101,7 @@ To change a wizard step, edit its entry in `src/lib/flows/`. The screens are gen
 ## Stack
 
 Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS v4, shadcn/ui on Base UI, lucide icons, PostgreSQL 18 + Prisma 7.
+
+## Deploying
+
+Production runs on one AWS server (EC2 in Tokyo) with Docker Compose: PostgreSQL 18, the app and Caddy for HTTPS. On a fresh Ubuntu 24.04 server one command installs and starts everything, the database included: `sudo bash deploy/aws/setup.sh your-domain`. Step-by-step guide, with updates, backups and troubleshooting: **[docs/aws-deploy.md](docs/aws-deploy.md)**.

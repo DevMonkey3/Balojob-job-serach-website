@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "求人一覧", robots: { index: fals
 export default function EmployerJobsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader screenId="BHALO115" title="求人一覧" titleEn="Your job postings">
+      <PageHeader title="求人一覧" titleEn="Your job postings">
         <Link href="/employer/jobs/new" className={buttonVariants()}>
           <PlusIcon />
           新規求人を登録する

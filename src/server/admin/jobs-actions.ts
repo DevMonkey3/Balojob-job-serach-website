@@ -19,6 +19,7 @@ import {
   type ActionState,
   redirectTarget,
 } from "@/server/admin/form";
+import { adminPath } from "@/server/admin/path";
 import {
   createJob,
   deleteJob,
@@ -83,7 +84,7 @@ export async function saveJobAction(_prev: ActionState, formData: FormData): Pro
   }
 
   updateTag("listings");
-  redirect(`/admin/jobs/${jobId}?saved=${id ? "1" : "created"}`);
+  redirect(adminPath(`/jobs/${jobId}?saved=${id ? "1" : "created"}`));
 }
 
 /** BHALO801 [削除]. */
@@ -94,6 +95,7 @@ export async function deleteJobAction(formData: FormData) {
   await deleteJob(id);
   await audit(staff.id, "delete", "job_postings", id);
   updateTag("listings");
+  // revalidatePath takes the route file path, which stays /admin/... whatever ADMIN_PATH is.
   revalidatePath("/admin/jobs");
   const to = redirectTarget(formData);
   if (to) redirect(to);
@@ -130,5 +132,5 @@ export async function saveJobOrderAction(_prev: ActionState, formData: FormData)
   await saveJobOrder(id, input);
   await audit(staff.id, "update", "job_orders", id);
 
-  redirect(`/admin/jobs/${id}?saved=1#job-order`);
+  redirect(adminPath(`/jobs/${id}?saved=1#job-order`));
 }

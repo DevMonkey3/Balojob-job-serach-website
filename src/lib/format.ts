@@ -3,7 +3,7 @@
 export const jobTrackLabels = {
   engineer: "技人国",
   ssw: "特定技能",
-  titp: "技能実習",
+  titp: "育成就労",
 } as const;
 
 export const schoolCategoryLabels = {

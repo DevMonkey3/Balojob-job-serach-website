@@ -1,0 +1,149 @@
+# Bhalojob on one server: PostgreSQL, the Next.js app and Caddy (HTTPS).
+#
+# Normally driven by the scripts in deploy/aws/ (see docs/aws-deploy.md).
+# Every ${VALUE} comes from the env file that setup.sh creates at
+# /etc/bhalojob/bhalojob.env and links here as ./.env, so the usual commands
+# also work from this folder:
+#
+#   sudo docker compose ps
+#   sudo docker compose logs -f app
+#
+# Only Caddy is reachable from outside (ports 80 and 443). The database and
+# the app listen on the private Docker network only.
+
+name: bhalojob
+
+# Docker keeps at most 5 x 10 MB of log per container.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?missing in the env file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?missing in the env file}
+      POSTGRES_DB: ${POSTGRES_DB:?missing in the env file}
+    # Sized for a 2 GB server. The app opens at most DATABASE_POOL_MAX connections.
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=768MB
+      - -c
+      - work_mem=8MB
+      - -c
+      - maintenance_work_mem=64MB
+      - -c
+      - max_connections=30
+    volumes:
+      # PostgreSQL 18 images keep their data under /var/lib/postgresql/18/docker,
+      # so the volume goes on the parent folder (not on .../data as before 18).
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      # Over TCP on purpose: during first-time setup the server runs on its
+      # socket only, and must not look ready before it has restarted for real.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    shm_size: 128mb
+    mem_limit: 640m
+    stop_grace_period: 1m
+    logging: *logging
+
+  # One-shot job: applies new migrations, and loads the master data while the
+  # master tables are empty. Runs before the app on every `up`, then exits.
+  migrate:
+    build:
+      context: .
+      target: migrate
+    image: bhalojob-migrate:latest
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?missing in the env file}
+    logging: *logging
+
+  app:
+    build:
+      context: .
+      target: runner
+      args:
+        NEXT_BUILD_CPUS: ${NEXT_BUILD_CPUS:-1}
+    image: bhalojob-app:latest
+    restart: unless-stopped
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: ${DATABASE_URL:?missing in the env file}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:?missing in the env file}
+      ADMIN_PATH: ${ADMIN_PATH:?missing in the env file}
+      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-5}
+      STORAGE_DIR: /data/storage
+      # Same clock as the PCs the site was developed on. Dates in the database stay UTC.
+      TZ: Asia/Tokyo
+      # Heap ceiling for a 2 GB server shared with PostgreSQL.
+      NODE_OPTIONS: --max-old-space-size=512
+    volumes:
+      - uploads:/data/storage
+    expose:
+      - "3000"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+      start_interval: 3s
+    mem_limit: 768m
+    stop_grace_period: 30s
+    logging: *logging
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?missing in the env file}
+    volumes:
+      - ./deploy/aws/caddy:/etc/caddy:ro
+      # Certificates live here. Losing this volume means asking Let's Encrypt again.
+      - caddy-data:/data
+      - caddy-config:/config
+    mem_limit: 192m
+    logging: *logging
+
+# Fixed names, so the data does not depend on what this folder is called.
+volumes:
+  db-data:
+    name: bhalojob-db-data
+  uploads:
+    name: bhalojob-uploads
+  caddy-data:
+    name: bhalojob-caddy-data
+  caddy-config:
+    name: bhalojob-caddy-config

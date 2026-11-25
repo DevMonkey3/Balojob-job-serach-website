@@ -7,8 +7,9 @@ import { openStoredFile } from "@/server/storage";
 // Who may open an uploaded file:
 //   * staff (any permission) — they review profiles;
 //   * the owner;
-//   * an employer, for the résumé / photo of a candidate whose application to
-//     one of the employer's jobs staff have approved (the hand-over rule).
+//   * an employer, for the photo (never the résumé file, it carries contact
+//     details) of a candidate whose application to one of the employer's jobs
+//     staff have approved.
 
 export type Viewer = { staff?: boolean; member?: Member | null };
 
@@ -23,7 +24,7 @@ export async function canViewFile(file: Pick<UploadedFile, "id" | "ownerUserId">
     where: {
       reviewStatus: "approved",
       jobPosting: { corporationId: BigInt(m.corporationId) },
-      individual: { userId: file.ownerUserId, OR: [{ resumeFileId: file.id }, { photoFileId: file.id }] },
+      individual: { userId: file.ownerUserId, photoFileId: file.id },
     },
     select: { id: true },
   });

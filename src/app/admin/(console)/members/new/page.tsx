@@ -11,7 +11,6 @@ export default function NewMemberPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        screenId="BHALO806"
         title="新規個人会員の追加"
         titleEn="New individual member"
         description="登録後に言語スキル・学歴などの明細を編集画面で入力できます。"

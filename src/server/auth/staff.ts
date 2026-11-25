@@ -2,14 +2,16 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
+import { STAFF_COOKIE } from "@/server/admin/console-path";
+import { adminPath, isConsoleRequest } from "@/server/admin/path";
 import { db } from "@/server/db";
 
 // Admin console sign-in (ユーザマスタ). Members will sign in through the auth
 // library later; staff sessions are kept separate and simple on purpose.
 
-export const STAFF_COOKIE = "bj_admin";
+export { STAFF_COOKIE };
 const SESSION_DAYS = 7;
 
 export type Staff = {
@@ -77,9 +79,19 @@ export function hasPermission(staff: Staff, permission: Permission) {
  */
 export async function requireStaff(permission?: Permission): Promise<Staff> {
   const staff = await getStaff();
-  if (!staff) redirect("/admin/login");
-  if (permission && !hasPermission(staff, permission)) redirect(`/admin?error=${permission}`);
+  if (!staff) return toLogin();
+  if (permission && !hasPermission(staff, permission)) redirect(adminPath(`?error=${permission}`));
   return staff;
+}
+
+/**
+ * Signed out → the login page, but only for a request that came in through
+ * the console address. Anything else gets a 404: a redirect would tell it
+ * where the console is (server actions can be posted to any page).
+ */
+async function toLogin(): Promise<never> {
+  if (!(await isConsoleRequest())) notFound();
+  redirect(adminPath("/login"));
 }
 
 export const PERMISSION_DENIED = "この処理を実行する権限がありません。";
@@ -87,7 +99,7 @@ export const PERMISSION_DENIED = "この処理を実行する権限がありま�
 /** For server actions: throws so the form can show the message instead of navigating away. */
 export async function requireStaffForAction(permission: Permission): Promise<Staff> {
   const staff = await getStaff();
-  if (!staff) redirect("/admin/login");
+  if (!staff) return toLogin();
   if (!hasPermission(staff, permission)) throw new Error(PERMISSION_DENIED);
   return staff;
 }
@@ -113,7 +125,8 @@ export async function createStaffSession(userId: string) {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    path: "/admin",
+    // The browser only ever sees the console address, never /admin.
+    path: adminPath(),
     expires: expiresAt,
   });
 }
@@ -122,5 +135,5 @@ export async function destroyStaffSession() {
   const store = await cookies();
   const token = store.get(STAFF_COOKIE)?.value;
   if (token) await db.staffSession.deleteMany({ where: { tokenHash: sha256(token) } });
-  store.delete({ name: STAFF_COOKIE, path: "/admin" });
+  store.delete({ name: STAFF_COOKIE, path: adminPath() });
 }

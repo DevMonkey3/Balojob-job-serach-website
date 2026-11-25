@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { InfoIcon } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { TableSkeleton } from "@/components/admin/status";
 import { CandidateProfileView } from "@/components/review/candidate-profile-view";
@@ -13,7 +14,8 @@ export const metadata: Metadata = { title: "応募者の履歴書", robots: { in
 
 type Props = { params: Promise<{ applicationId: string }> };
 
-// BHALO201 履歴書 of one staff-approved applicant, with contact details (the hand-over).
+// BHALO201 履歴書 of one staff-approved applicant. No contact details and no uploaded
+// résumé file: interviews and every message go through staff.
 export default function EmployerApplicantPage({ params }: Props) {
   return (
     <div className="flex flex-col gap-6">
@@ -37,11 +39,14 @@ async function Applicant({ params }: Props) {
 
   return (
     <>
-      <PageHeader screenId="BHALO201" title="応募者の履歴書" titleEn="Applicant résumé" description={meta.join(" ・ ")} />
+      <PageHeader title="応募者の履歴書" titleEn="Applicant résumé" description={meta.join(" ・ ")} />
+      <p className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
+        <InfoIcon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+        応募者の連絡先は表示されません。面接のご希望や選考結果は、バロジョブの担当スタッフまでご連絡ください。
+      </p>
       <CandidateProfileView
         member={a.member}
         files={a.files}
-        showContact
         backHref={`/employer/jobs/${a.job.id}#applicants`}
         backLabel="求人に戻る"
       />

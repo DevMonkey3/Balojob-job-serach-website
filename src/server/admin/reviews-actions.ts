@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireStaffForAction } from "@/server/auth/staff";
 import { audit } from "@/server/admin/audit";
 import { parseId, redirectTarget } from "@/server/admin/form";
+import { adminPath } from "@/server/admin/path";
 import { reviewTargetTable, setReview, type ReviewTarget } from "@/server/admin/reviews";
 
 // [承認] / [差戻し] on the review queues and the detail pages. Form fields:
@@ -19,7 +20,8 @@ function readTarget(formData: FormData): { target: ReviewTarget; id: bigint } | 
   return { target: target as ReviewTarget, id };
 }
 
-const listPath: Record<ReviewTarget, string> = {
+// Route file paths for revalidatePath(): they stay /admin/... whatever ADMIN_PATH is.
+const listRoute: Record<ReviewTarget, string> = {
   job: "/admin/jobs",
   candidate: "/admin/members",
   application: "/admin/applications",
@@ -39,11 +41,11 @@ async function decide(formData: FormData, status: "approved" | "rejected") {
   await audit(staff.id, status === "approved" ? "approve" : "reject", reviewTargetTable[parsed.target], parsed.id, reason ? { reason } : undefined);
   if (parsed.target === "job") updateTag("listings");
   revalidatePath("/admin/reviews");
-  revalidatePath(listPath[parsed.target]);
+  revalidatePath(listRoute[parsed.target]);
   revalidatePath("/mypage");
   revalidatePath("/employer/jobs");
 
-  redirect(redirectTarget(formData) ?? `/admin/reviews?saved=${status}`);
+  redirect(redirectTarget(formData) ?? adminPath(`/reviews?saved=${status}`));
 }
 
 export async function approveAction(formData: FormData) {

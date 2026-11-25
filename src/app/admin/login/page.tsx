@@ -2,7 +2,9 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/site/logo";
+import { AdminPathProvider } from "@/components/admin/admin-path";
 import { StaffLoginForm } from "@/components/admin/login-form";
+import { adminPath, requireConsoleRequest } from "@/server/admin/path";
 import { getStaff } from "@/server/auth/staff";
 import { db } from "@/server/db";
 
@@ -21,8 +23,14 @@ export default function AdminLoginPage() {
 }
 
 async function LoginGate() {
-  if (await getStaff()) redirect("/admin");
+  // Only for requests the proxy let in through the console address.
+  await requireConsoleRequest();
+  if (await getStaff()) redirect(adminPath());
   // No staff yet (fresh database): offer to create the first Administrator.
   const staffCount = await db.user.count({ where: { accountType: "staff" } });
-  return <StaffLoginForm setup={staffCount === 0} />;
+  return (
+    <AdminPathProvider base={adminPath()}>
+      <StaffLoginForm setup={staffCount === 0} />
+    </AdminPathProvider>
+  );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminPath } from "@/components/admin/admin-path";
 import {
   CheckboxField,
   FieldGroup,
@@ -27,6 +28,9 @@ const yesNoValue = (v: boolean | null | undefined) => (v === null || v === undef
 
 // BHALO806 新規個人会員追加編集. `member` is null when adding. The child tables
 // (言語スキル, 学歴, …) are edited in their own sections below this form.
+// The groups follow the member screens: 基本情報 = BHALO010, 住所情報 = 011,
+// 画像・動画 = 012 / 210, VISA情報 = 013, 自己紹介 = 018, 求職希望・留学希望 = 019,
+// 履歴書情報 = 201.
 export function MemberForm({
   member,
   options,
@@ -36,14 +40,15 @@ export function MemberForm({
   options: MemberFormOptions;
   encryptionReady: boolean;
 }) {
+  const admin = useAdminPath();
   const resume = member?.resume;
   const hasPassport = !!resume?.passportMasked;
 
   return (
-    <FormShell action={saveMemberAction} cancelHref="/admin/members" submitLabel={member ? "更新" : "登録"}>
+    <FormShell action={saveMemberAction} cancelHref={admin("/members")} submitLabel={member ? "更新" : "登録"}>
       {member && <HiddenField name="id" value={member.id} />}
 
-      <FieldGroup title="会員情報" screenId="BHALO806">
+      <FieldGroup title="会員情報">
         {member && (
           <>
             <TextField name="_memberNo" label="会員番号" defaultValue={member.memberNo} readOnly />
@@ -70,7 +75,7 @@ export function MemberForm({
         />
       </FieldGroup>
 
-      <FieldGroup title="基本情報" screenId="BHALO010">
+      <FieldGroup title="基本情報">
         <TextField name="fullName" label="氏名" required defaultValue={member?.fullName} maxLength={80} />
         <TextField name="nameKana" label="フリガナ" defaultValue={member?.nameKana} maxLength={120} />
         <RadioField name="gender" label="性別" options={options.genders} defaultValue={member?.gender} />
@@ -80,7 +85,7 @@ export function MemberForm({
         <TextField name="childrenCount" label="子供人数" type="number" suffix="人" defaultValue={member?.childrenCount} min={0} max={99} />
       </FieldGroup>
 
-      <FieldGroup title="住所情報" screenId="BHALO011">
+      <FieldGroup title="住所情報">
         <TextField name="residenceCountry" label="居住国" list={options.countries} defaultValue={member?.residenceCountry} maxLength={80} />
         <TextField name="nationality" label="国籍" list={options.countries} defaultValue={member?.nationality} maxLength={80} />
         <TextField name="nativeLanguage" label="母国語" list={options.languages} defaultValue={member?.nativeLanguage} maxLength={80} />
@@ -93,27 +98,27 @@ export function MemberForm({
         <TextField name="houseNumber" label="番地" defaultValue={member?.houseNumber} maxLength={20} />
       </FieldGroup>
 
-      <FieldGroup title="画像・動画" screenId="BHALO012 / 210">
+      <FieldGroup title="画像・動画">
         <p className="text-sm text-muted-foreground sm:col-span-2">
           写真・アピール動画のアップロードは準備中（ファイル保存の接続後）
         </p>
       </FieldGroup>
 
-      <FieldGroup title="VISA情報" screenId="BHALO013" description="日本国内に住んでいる場合に入力します。">
+      <FieldGroup title="VISA情報" description="日本国内に住んでいる場合に入力します。">
         <SelectField name="visaStatus" label="VISAステータス" options={options.visas} defaultValue={member?.visaStatus} />
         <TextField name="visaExpiry" label="有効期限" type="month" defaultValue={member?.visaExpiry} />
       </FieldGroup>
 
-      <FieldGroup title="自己紹介" screenId="BHALO018">
+      <FieldGroup title="自己紹介">
         <TextareaField name="introduction" label="自己紹介" defaultValue={member?.introduction} rows={6} maxLength={4000} span={2} />
       </FieldGroup>
 
-      <FieldGroup title="求職希望・留学希望" screenId="BHALO019" description="希望する項目をすべてチェックします。">
+      <FieldGroup title="求職希望・留学希望" description="希望する項目をすべてチェックします。">
         <div>
           <p className="mb-1 text-sm font-medium">求職希望</p>
           <CheckboxField name="wantsEngineer" label="技人国" defaultChecked={member?.wantsEngineer} />
           <CheckboxField name="wantsSsw" label="特定技能" defaultChecked={member?.wantsSsw} />
-          <CheckboxField name="wantsTitp" label="技能実習" defaultChecked={member?.wantsTitp} />
+          <CheckboxField name="wantsTitp" label="育成就労" defaultChecked={member?.wantsTitp} />
         </div>
         <div>
           <p className="mb-1 text-sm font-medium">留学希望</p>
@@ -123,7 +128,7 @@ export function MemberForm({
         </div>
       </FieldGroup>
 
-      <FieldGroup title="履歴書情報" screenId="BHALO201" description="履歴書に印刷される項目。家族構成は下の家族構成セクションで入力します。">
+      <FieldGroup title="履歴書情報" description="履歴書に印刷される項目。家族構成は下の家族構成セクションで入力します。">
         <TextField name="heightCm" label="身長" type="number" step="0.1" suffix="cm" defaultValue={resume?.heightCm} min={0} />
         <TextField name="weightKg" label="体重" type="number" step="0.1" suffix="kg" defaultValue={resume?.weightKg} min={0} />
         <TextField name="bloodType" label="血液型" defaultValue={resume?.bloodType} maxLength={8} />

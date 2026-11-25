@@ -9,7 +9,7 @@ import type { SettingValues } from "@/server/admin/masters";
 export function SettingsForm({ values }: { values: SettingValues }) {
   return (
     <FormShell action={saveSettingsAction}>
-      <FieldGroup title="申込メールアドレス" screenId="BHALO816" description="コンタクト申込（BHALO200）の通知先です。">
+      <FieldGroup title="申込メールアドレス" description="コンタクト申込の通知先です。">
         <TextField
           name="application_email_individual"
           label="個人申込メールアドレス"

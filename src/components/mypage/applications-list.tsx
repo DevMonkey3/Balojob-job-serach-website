@@ -1,12 +1,16 @@
+import Link from "next/link";
+import { Building2Icon, CalendarIcon, MapPinIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ReviewBadge } from "@/components/review/review-badge";
 import { applicationStatusForCandidate, type ReviewStatus } from "@/lib/review";
 
-// BHALO200 応募状況: the candidate's applications and where staff are with each.
+// 応募状況: the candidate's applications and where staff are with each.
+// A list rather than a table, so it reads the same on a phone.
 
 export type ApplicationView = {
   id: string;
+  /** The job's page, when the job still exists. */
+  jobId: string | null;
   /** Formatted on the server (YYYY/MM/DD). */
   appliedAt: string;
   company: string;
@@ -21,46 +25,59 @@ export type ApplicationView = {
 
 export function ApplicationsList({ rows }: { rows: ApplicationView[] }) {
   if (rows.length === 0) {
-    return <p className="rounded-xl border p-8 text-center text-sm text-muted-foreground">応募はまだありません。</p>;
+    return (
+      <p className="p-8 text-center text-sm text-muted-foreground">
+        応募はまだありません。気になる求人に応募すると、ここに状況が表示されます。
+      </p>
+    );
   }
 
   return (
-    <div className="rounded-xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>応募日</TableHead>
-            <TableHead>会社名</TableHead>
-            <TableHead>職種</TableHead>
-            <TableHead>勤務地</TableHead>
-            <TableHead>ステータス</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((a) => (
-            <TableRow key={a.id}>
-              <TableCell className="font-mono text-xs">{a.appliedAt}</TableCell>
-              <TableCell>{a.company || a.targetLabel || "—"}</TableCell>
-              <TableCell>
-                {a.category && (
-                  <Badge variant="outline" className="mr-2">
-                    {a.category}
-                  </Badge>
-                )}
-                {a.jobType || "—"}
-              </TableCell>
-              <TableCell>{a.location || "—"}</TableCell>
-              <TableCell className="whitespace-normal">
-                {a.reviewStatus === "approved" ? (
-                  <Badge>{applicationStatusForCandidate.approved}</Badge>
+    <ul className="divide-y">
+      {rows.map((a) => {
+        const title = a.jobType || a.targetLabel || "求人";
+        return (
+          <li key={a.id} className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <p className="flex flex-wrap items-center gap-2 font-semibold">
+                {a.category && <Badge variant="outline">{a.category}</Badge>}
+                {a.jobId ? (
+                  <Link href={`/jobs/${a.jobId}`} className="text-primary hover:underline">
+                    {title}
+                  </Link>
                 ) : (
-                  <ReviewBadge kind="application" status={a.reviewStatus} reason={a.rejectionReason} />
+                  title
                 )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+              </p>
+              <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                {a.company && (
+                  <span className="flex items-center gap-1">
+                    <Building2Icon className="size-3.5" aria-hidden />
+                    {a.company}
+                  </span>
+                )}
+                {a.location && (
+                  <span className="flex items-center gap-1">
+                    <MapPinIcon className="size-3.5" aria-hidden />
+                    {a.location}
+                  </span>
+                )}
+                <span className="flex items-center gap-1 tabular-nums">
+                  <CalendarIcon className="size-3.5" aria-hidden />
+                  応募日 {a.appliedAt}
+                </span>
+              </p>
+            </div>
+            <div className="shrink-0">
+              {a.reviewStatus === "approved" ? (
+                <Badge>{applicationStatusForCandidate.approved}</Badge>
+              ) : (
+                <ReviewBadge kind="application" status={a.reviewStatus} reason={a.rejectionReason} />
+              )}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

@@ -17,6 +17,7 @@ import {
   str,
   type ActionState,
 } from "@/server/admin/form";
+import { adminPath } from "@/server/admin/path";
 import {
   CATEGORY_RE,
   SEQUENCES,
@@ -113,7 +114,7 @@ export async function saveOptionsAction(_prev: ActionState, formData: FormData):
   const q = new URLSearchParams({ category });
   if (rawParentId) q.set("parent", rawParentId);
   q.set("saved", "1");
-  redirect(`/admin/masters/options?${q}`);
+  redirect(adminPath(`/masters/options?${q}`));
 }
 
 const industriesFormSchema = z.object({ id: list, labelJa: list, labelEn: list, sortOrder: list });
@@ -139,7 +140,7 @@ export async function saveIndustriesAction(_prev: ActionState, formData: FormDat
   await audit(staff.id, "update", "popular_industries", "all", result);
 
   updateTag("popular-industries");
-  redirect("/admin/masters/industries?saved=1");
+  redirect(adminPath("/masters/industries?saved=1"));
 }
 
 // --- ログインマスタメンテ (BHALO813) --------------------------------------------
@@ -153,6 +154,7 @@ export async function toggleUserActiveAction(formData: FormData) {
   if (!(await getLogin(id))) return;
   await setUserActive(id, active);
   await audit(staff.id, "update", "users", id, { isActive: active });
+  // revalidatePath takes the route file path, which stays /admin/... whatever ADMIN_PATH is.
   revalidatePath("/admin/masters/logins");
 }
 
@@ -191,7 +193,7 @@ export async function setSequenceAction(_prev: ActionState, formData: FormData):
   if (!result) return { errors: { value: "現在値より大きい値を入力してください" }, message: INVALID_INPUT };
   await audit(staff.id, "update", "sequences", sequence, { from: result.from, to: value });
 
-  redirect("/admin/masters/numbering?saved=1");
+  redirect(adminPath("/masters/numbering?saved=1"));
 }
 
 // --- 管理マスタメンテ (BHALO816) -----------------------------------------------
@@ -213,5 +215,5 @@ export async function saveSettingsAction(_prev: ActionState, formData: FormData)
   await saveSiteSettings(parsed.data);
   for (const key of Object.keys(parsed.data)) await audit(staff.id, "update", "site_settings", key);
 
-  redirect("/admin/masters/settings?saved=1");
+  redirect(adminPath("/masters/settings?saved=1"));
 }

@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { PencilIcon, PlusIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminLink } from "@/components/admin/admin-path";
 import { UrlCell } from "@/components/admin/corporations/corporation-table";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { SelectField, TextField } from "@/components/admin/fields";
@@ -20,11 +20,11 @@ import { deleteRecruitmentAction } from "@/server/admin/recruitments-actions";
 export default function RecruitmentsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader screenId="BHALO809" title="生徒募集状況一覧" titleEn="Student recruitment">
-        <Link href="/admin/recruitments/new" className={buttonVariants()}>
+      <PageHeader title="生徒募集状況一覧" titleEn="Student recruitment">
+        <AdminLink href="/recruitments/new" className={buttonVariants()}>
           <PlusIcon />
           生徒募集の追加
-        </Link>
+        </AdminLink>
       </PageHeader>
       <Suspense fallback={<TableSkeleton />}>
         <RecruitmentsList searchParams={searchParams} />
@@ -52,7 +52,7 @@ async function RecruitmentsList({ searchParams }: { searchParams: Promise<Search
     <>
       <Flash saved={param(sp, "saved")} />
 
-      <SearchForm clearHref="/admin/recruitments">
+      <SearchForm clearHref="/recruitments">
         <TextField name="school" label="学校名" defaultValue={filters.school} />
         <SelectField name="category" label="種別" options={schoolCategoryOptions} defaultValue={filters.category} placeholder="すべて" />
         <TextField name="faculty" label="学部" defaultValue={filters.faculty} />
@@ -81,9 +81,9 @@ async function RecruitmentsList({ searchParams }: { searchParams: Promise<Search
             {rows.map((r) => (
               <TableRow key={r.id}>
                 <TableCell className="font-mono text-xs">
-                  <Link href={`/admin/schools/${r.corporation.id}`} className="text-primary hover:underline">
+                  <AdminLink href={`/schools/${r.corporation.id}`} className="text-primary hover:underline">
                     {r.corporation.memberNo}
-                  </Link>
+                  </AdminLink>
                 </TableCell>
                 <TableCell>{r.corporation.name}</TableCell>
                 <TableCell>{r.faculty}</TableCell>
@@ -98,10 +98,10 @@ async function RecruitmentsList({ searchParams }: { searchParams: Promise<Search
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
-                    <Link href={`/admin/recruitments/${r.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                    <AdminLink href={`/recruitments/${r.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
                       <PencilIcon />
                       編集
-                    </Link>
+                    </AdminLink>
                     {canDelete && (
                       <DeleteButton
                         action={deleteRecruitmentAction}
@@ -117,7 +117,7 @@ async function RecruitmentsList({ searchParams }: { searchParams: Promise<Search
         </Table>
       </div>
 
-      <Pagination pathname="/admin/recruitments" searchParams={sp} page={page} pageCount={pageCount} total={total} pageSize={RECRUITMENT_PAGE_SIZE} />
+      <Pagination pathname="/recruitments" searchParams={sp} page={page} pageCount={pageCount} total={total} pageSize={RECRUITMENT_PAGE_SIZE} />
     </>
   );
 }

@@ -38,7 +38,6 @@ async function EditSchool({ params, searchParams }: Props) {
   return (
     <>
       <PageHeader
-        screenId="BHALO808"
         title="学校の編集"
         titleEn="Edit school"
         description={`${school.name} / 法人会員番号 ${school.memberNo} ・ 登録 ${fmtDate(school.createdAt)} ・ 最終更新 ${fmtDateTime(school.updatedAt)}`}
@@ -47,7 +46,7 @@ async function EditSchool({ params, searchParams }: Props) {
           <DeleteButton
             action={deleteSchoolAction}
             id={school.id}
-            redirectTo="/admin/schools"
+            redirectTo="/schools"
             message="この学校情報を削除します。よろしいですか？"
             variant="outline"
             size="default"

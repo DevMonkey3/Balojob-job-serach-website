@@ -43,7 +43,6 @@ async function EditCompany({ params, searchParams }: Props) {
   return (
     <>
       <PageHeader
-        screenId="BHALO804"
         title="企業の編集"
         titleEn="Edit company"
         description={`${company.name} / 法人会員番号 ${company.memberNo} ・ 登録 ${fmtDate(company.createdAt)} ・ 最終更新 ${fmtDateTime(company.updatedAt)}`}
@@ -52,7 +51,7 @@ async function EditCompany({ params, searchParams }: Props) {
           <DeleteButton
             action={deleteCompanyAction}
             id={company.id}
-            redirectTo="/admin/companies"
+            redirectTo="/companies"
             message="この企業情報を削除します。よろしいですか？"
             variant="outline"
             size="default"

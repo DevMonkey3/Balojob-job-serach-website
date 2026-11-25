@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     template: "%s | Bhalojob",
   },
   description:
-    "バロジョブは、より速く、より簡単に世界中の優秀な人材と企業・学校をマッチングするお手伝いをします。技人国・特定技能・技能実習の求人と、大学・専門学校・日本語学校への留学情報。",
+    "バロジョブは、より速く、より簡単に世界中の優秀な人材と企業・学校をマッチングするお手伝いをします。技人国・特定技能・育成就労の求人と、大学・専門学校・日本語学校への留学情報。",
 };
 
 export const viewport: Viewport = {
@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ja" className="h-full antialiased">
+    <html lang="ja" className="h-full antialiased" data-scroll-behavior="smooth">
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );

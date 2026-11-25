@@ -1,9 +1,9 @@
-import Link from "next/link";
+import { AdminLink } from "@/components/admin/admin-path";
 import { cn } from "@/lib/utils";
 import type { PendingCounts } from "@/server/admin/reviews";
 
-// The three review queues on /admin/reviews, styled like the dashboard's
-// period toggle. Server-safe: plain links, the page reads ?tab.
+// The three review queues on the console's /reviews page, styled like the
+// dashboard's period toggle. Server-safe: plain links, the page reads ?tab.
 
 export type QueueTab = keyof PendingCounts;
 
@@ -15,7 +15,8 @@ const tabs: { key: QueueTab; label: string }[] = [
 
 export const isQueueTab = (v: string): v is QueueTab => tabs.some((t) => t.key === v);
 
-export const queueHref = (tab: QueueTab) => `/admin/reviews?tab=${tab}`;
+/** Path inside the console (for <AdminLink> and `redirectTo`). */
+export const queueHref = (tab: QueueTab) => `/reviews?tab=${tab}`;
 
 export function QueueTabs({ active, counts }: { active: QueueTab; counts: PendingCounts }) {
   return (
@@ -23,7 +24,7 @@ export function QueueTabs({ active, counts }: { active: QueueTab; counts: Pendin
       {tabs.map((t) => {
         const current = active === t.key;
         return (
-          <Link
+          <AdminLink
             key={t.key}
             href={queueHref(t.key)}
             aria-current={current ? "page" : undefined}
@@ -36,7 +37,7 @@ export function QueueTabs({ active, counts }: { active: QueueTab; counts: Pendin
             <span className={cn("ml-1 tabular-nums", !current && counts[t.key] === 0 && "text-muted-foreground")}>
               ({counts[t.key].toLocaleString("ja-JP")})
             </span>
-          </Link>
+          </AdminLink>
         );
       })}
     </nav>

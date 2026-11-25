@@ -8,10 +8,12 @@ import { loadProfile } from "@/server/member/profile";
 // are loaded once here and shared by every step through the WizardProvider.
 export default function ProfileLayout({ children }: LayoutProps<"/profile">) {
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-10">
-      <Suspense fallback={<StepSkeleton />}>
-        <ProfileShell>{children}</ProfileShell>
-      </Suspense>
+    <div className="flex-1 bg-page">
+      <div className="mx-auto w-full max-w-3xl px-4 py-8 md:py-10">
+        <Suspense fallback={<StepSkeleton />}>
+          <ProfileShell>{children}</ProfileShell>
+        </Suspense>
+      </div>
     </div>
   );
 }

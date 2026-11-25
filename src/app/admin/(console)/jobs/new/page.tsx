@@ -10,7 +10,7 @@ import { getChildOptionLabels, getOptionLabels } from "@/server/admin/options";
 export default function NewJobPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader screenId="BHALO802" title="新規求人の追加" titleEn="New job posting" />
+      <PageHeader title="新規求人の追加" titleEn="New job posting" />
       <Suspense fallback={<TableSkeleton />}>
         <NewJobForm searchParams={searchParams} />
       </Suspense>

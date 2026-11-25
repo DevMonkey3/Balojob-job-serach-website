@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { PencilIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminLink } from "@/components/admin/admin-path";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { EmptyRow, InactiveMark } from "@/components/admin/status";
 import type { CorporationKind } from "@/generated/prisma/client";
@@ -9,17 +9,18 @@ import type { CorporationRow } from "@/server/admin/corporations";
 import { deleteCompanyAction, deleteSchoolAction } from "@/server/admin/corporations-actions";
 
 // The rows of 企業一覧 (BHALO803) and 学校一覧 (BHALO807). Only the third
-// column differs: 業種 for companies, 学校種別 for schools.
+// column differs: 業種 for companies, 学校種別 for schools. `path` is the
+// list's path inside the console.
 const wording = {
   company: {
-    path: "/admin/companies",
+    path: "/companies",
     name: "会社名",
     third: "業種",
     confirm: "この企業情報を削除します。よろしいですか？",
     deleteAction: deleteCompanyAction,
   },
   school: {
-    path: "/admin/schools",
+    path: "/schools",
     name: "学校名",
     third: "学校種別",
     confirm: "この学校情報を削除します。よろしいですか？",
@@ -66,9 +67,9 @@ export function CorporationTable({
           {rows.map((c) => (
             <TableRow key={c.id}>
               <TableCell className="font-mono text-xs">
-                <Link href={`${t.path}/${c.id}`} className="text-primary hover:underline">
+                <AdminLink href={`${t.path}/${c.id}`} className="text-primary hover:underline">
                   {c.memberNo}
-                </Link>
+                </AdminLink>
               </TableCell>
               <TableCell>{c.name}</TableCell>
               <TableCell>{kind === "company" ? c.industry : c.schoolCategory}</TableCell>
@@ -81,10 +82,10 @@ export function CorporationTable({
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
-                  <Link href={`${t.path}/${c.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                  <AdminLink href={`${t.path}/${c.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
                     <PencilIcon />
                     編集
-                  </Link>
+                  </AdminLink>
                   {canDelete && <DeleteButton action={t.deleteAction} id={c.id} message={t.confirm} />}
                 </div>
               </TableCell>

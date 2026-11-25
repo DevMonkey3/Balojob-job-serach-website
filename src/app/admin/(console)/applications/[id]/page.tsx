@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminLink } from "@/components/admin/admin-path";
 import { ApplicationStatusBadge } from "@/components/admin/applications/status-badge";
 import { ApplicationStatusForm } from "@/components/admin/applications/status-form";
 import { DeleteButton } from "@/components/admin/delete-button";
@@ -20,6 +20,7 @@ import { parseId } from "@/server/admin/form";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<SearchParams> };
 
+// コンタクト申込 (BHALO200): one request, its review and the staff memo.
 export default function ApplicationPage({ params, searchParams }: Props) {
   return (
     <div className="flex flex-col gap-6">
@@ -42,7 +43,6 @@ async function ApplicationDetail({ params, searchParams }: Props) {
   return (
     <>
       <PageHeader
-        screenId="BHALO200"
         title={`コンタクト申込 #${a.id}`}
         description={`申込日時 ${fmtDateTime(a.createdAt)} ・ 最終更新 ${fmtDateTime(a.updatedAt)}`}
       >
@@ -51,7 +51,7 @@ async function ApplicationDetail({ params, searchParams }: Props) {
           <DeleteButton
             action={deleteApplicationAction}
             id={a.id}
-            redirectTo="/admin/applications"
+            redirectTo="/applications"
             message="このコンタクト申込を削除します。よろしいですか？"
             variant="outline"
             size="default"
@@ -69,9 +69,9 @@ async function ApplicationDetail({ params, searchParams }: Props) {
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
               <dt className="text-muted-foreground">会員番号</dt>
               <dd className="font-mono">
-                <Link href={`/admin/members/${a.individual.id}`} className="text-primary hover:underline">
+                <AdminLink href={`/members/${a.individual.id}`} className="text-primary hover:underline">
                   {a.individual.memberNo}
-                </Link>
+                </AdminLink>
               </dd>
               <dt className="text-muted-foreground">氏名</dt>
               <dd>{a.individual.fullName}</dd>
@@ -105,15 +105,15 @@ async function ApplicationDetail({ params, searchParams }: Props) {
                     <TableCell className="whitespace-normal">{i.targetLabel}</TableCell>
                     <TableCell className="whitespace-normal">
                       {i.job && (
-                        <Link href={`/admin/jobs/${i.job.id}`} className="text-primary hover:underline">
+                        <AdminLink href={`/jobs/${i.job.id}`} className="text-primary hover:underline">
                           求人 {i.job.companyName} / {i.job.jobType} (#{i.job.jobNo})
-                        </Link>
+                        </AdminLink>
                       )}
                       {i.recruitment && (
-                        <Link href={`/admin/recruitments/${i.recruitment.id}`} className="text-primary hover:underline">
+                        <AdminLink href={`/recruitments/${i.recruitment.id}`} className="text-primary hover:underline">
                           募集 {i.recruitment.schoolName} / {i.recruitment.faculty} {i.recruitment.department} (#
                           {i.recruitment.recruitmentNo})
-                        </Link>
+                        </AdminLink>
                       )}
                       {!i.job && !i.recruitment && <span className="text-muted-foreground">削除済み</span>}
                     </TableCell>
@@ -142,7 +142,7 @@ async function ApplicationDetail({ params, searchParams }: Props) {
           </dl>
           {canReview ? (
             <div className="flex flex-wrap items-center gap-2">
-              <ReviewActions target="application" id={a.id} targetLabel="応募" redirectTo={`/admin/applications/${a.id}`} size="default" />
+              <ReviewActions target="application" id={a.id} targetLabel="応募" redirectTo={`/applications/${a.id}`} size="default" />
               <span className="text-xs text-muted-foreground">承認すると企業に紹介されます。差戻し理由は応募者に表示されます。</span>
             </div>
           ) : (

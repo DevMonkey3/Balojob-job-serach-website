@@ -15,8 +15,8 @@ import type { ActionState } from "@/server/admin/form";
 const initialState: ActionState = {};
 
 const copy = {
-  individual: { screenId: "BHALO002", title: "新規個人会員登録", titleEn: "Individuals" },
-  corporate: { screenId: "BHALO003", title: "新規法人会員登録", titleEn: "Companies" },
+  individual: { title: "無料会員登録（個人の方）", titleEn: "For job seekers and students" },
+  corporate: { title: "法人会員登録（企業の方）", titleEn: "For companies" },
 } as const;
 
 export function AccountForm({ kind }: { kind: "individual" | "corporate" }) {
@@ -24,7 +24,7 @@ export function AccountForm({ kind }: { kind: "individual" | "corporate" }) {
     kind === "individual" ? registerIndividualAction : registerEmployerAction,
     initialState,
   );
-  const { screenId, title, titleEn } = copy[kind];
+  const { title, titleEn } = copy[kind];
 
   // Submitting by hand keeps the typed values on screen when the action comes
   // back with validation errors (React resets a form after a native action submit).
@@ -35,11 +35,11 @@ export function AccountForm({ kind }: { kind: "individual" | "corporate" }) {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md shadow-lg shadow-brand-orange/10">
       <CardHeader>
-        <p className="font-mono text-xs text-muted-foreground">{screenId}</p>
-        <CardTitle className="text-xl">
-          {title} <span className="text-base font-normal text-muted-foreground">{titleEn}</span>
+        <CardTitle className="text-2xl font-bold">
+          {title}
+          <span className="mt-1 block text-sm font-normal text-muted-foreground">{titleEn}</span>
         </CardTitle>
         <CardDescription>ログイン情報を登録してください (Create your login)</CardDescription>
       </CardHeader>

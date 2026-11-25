@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminPath } from "@/components/admin/admin-path";
 import {
   CheckboxField,
   FieldGroup,
@@ -25,6 +26,7 @@ export function RecruitmentForm({
   options: RecruitmentFormOptions;
   defaultMemberNo?: string;
 }) {
+  const admin = useAdminPath();
   // A value that was later removed from the master must stay selectable, or saving would clear it.
   const schoolGenders =
     r?.schoolGender && !options.schoolGenders.includes(r.schoolGender)
@@ -32,10 +34,10 @@ export function RecruitmentForm({
       : options.schoolGenders;
 
   return (
-    <FormShell action={saveRecruitmentAction} cancelHref="/admin/recruitments" submitLabel={r ? "更新" : "登録"}>
+    <FormShell action={saveRecruitmentAction} cancelHref={admin("/recruitments")} submitLabel={r ? "更新" : "登録"}>
       {r && <HiddenField name="id" value={r.id} />}
 
-      <FieldGroup title="生徒募集情報" screenId="BHALO156">
+      <FieldGroup title="生徒募集情報">
         {r ? (
           <>
             <TextField name="_memberNo" label="法人会員番号" defaultValue={r.memberNo} readOnly />

@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminPath } from "@/components/admin/admin-path";
 import {
   CheckboxField,
   FieldGroup,
@@ -37,13 +38,14 @@ export function JobForm({
   cancelHref?: string;
   variant?: "employer";
 }) {
+  const admin = useAdminPath();
   const employer = variant === "employer";
   const submitLabel = employer ? (job ? "更新して再審査" : "審査に出す") : job ? "更新" : "登録";
   return (
-    <FormShell action={action ?? saveJobAction} cancelHref={cancelHref ?? "/admin/jobs"} submitLabel={submitLabel}>
+    <FormShell action={action ?? saveJobAction} cancelHref={cancelHref ?? admin("/jobs")} submitLabel={submitLabel}>
       {job && <HiddenField name="id" value={job.id} />}
 
-      <FieldGroup title="求人情報" screenId={employer ? "BHALO116" : "BHALO802"}>
+      <FieldGroup title="求人情報">
         {job && !employer && <TextField name="_memberNo" label="法人会員番号" defaultValue={job.memberNo} readOnly />}
         {job && <TextField name="_jobNo" label="求人番号" defaultValue={job.jobNo} readOnly />}
         {job && <TextField name="_company" label="会社名" defaultValue={job.companyName} readOnly span={employer ? 1 : 2} />}

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { PlusIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { AdminLink } from "@/components/admin/admin-path";
 import { CorporationTable } from "@/components/admin/corporations/corporation-table";
 import { SelectField, TextField } from "@/components/admin/fields";
 import { Flash } from "@/components/admin/flash";
@@ -17,11 +17,11 @@ import { CORPORATION_PAGE_SIZE, listCorporations } from "@/server/admin/corporat
 export default function CompaniesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader screenId="BHALO803" title="企業一覧" titleEn="Companies">
-        <Link href="/admin/companies/new" className={buttonVariants()}>
+      <PageHeader title="企業一覧" titleEn="Companies">
+        <AdminLink href="/companies/new" className={buttonVariants()}>
           <PlusIcon />
           新規企業の追加
-        </Link>
+        </AdminLink>
       </PageHeader>
       <Suspense fallback={<TableSkeleton />}>
         <CompaniesList searchParams={searchParams} />
@@ -46,7 +46,7 @@ async function CompaniesList({ searchParams }: { searchParams: Promise<SearchPar
     <>
       <Flash saved={param(sp, "saved")} />
 
-      <SearchForm clearHref="/admin/companies">
+      <SearchForm clearHref="/companies">
         <TextField name="name" label="会社名" defaultValue={filters.name} />
         <TextField name="industry" label="業種" defaultValue={filters.industry} />
         <TextField name="location" label="所在地" defaultValue={filters.location} />
@@ -55,7 +55,7 @@ async function CompaniesList({ searchParams }: { searchParams: Promise<SearchPar
 
       <CorporationTable kind="company" rows={rows} canDelete={hasPermission(staff, "delete")} />
 
-      <Pagination pathname="/admin/companies" searchParams={sp} page={page} pageCount={pageCount} total={total} pageSize={CORPORATION_PAGE_SIZE} />
+      <Pagination pathname="/companies" searchParams={sp} page={page} pageCount={pageCount} total={total} pageSize={CORPORATION_PAGE_SIZE} />
     </>
   );
 }

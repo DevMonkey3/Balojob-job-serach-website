@@ -63,8 +63,8 @@ export const getMember = cache(async (): Promise<Member | null> => {
   };
 });
 
-/** Where a member's own area is. */
-export const memberHome = (kind: MemberKind) => (kind === "individual" ? "/mypage" : "/employer");
+/** Where a member's own area is: My Page, or the company's job list (with its applicant counts). */
+export const memberHome = (kind: MemberKind) => (kind === "individual" ? "/mypage" : "/employer/jobs");
 
 /**
  * For pages and actions. Signed out → login (returning here afterwards).

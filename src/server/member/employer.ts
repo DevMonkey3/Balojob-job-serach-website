@@ -175,7 +175,7 @@ export async function listApprovedApplicants(corporationId: bigint, jobId: bigin
 export type ApprovedApplicant = {
   application: { id: string; appliedAt: Date };
   job: { id: string; jobNo: number; jobType: string };
-  /** The 履歴書 data without what an employer must not see (APPI): login, passport, religion, allergies. */
+  /** The 履歴書 data without what an employer must not see: login, contact details, address, passport, religion, allergies. */
   member: MemberDetail;
   files: { photoUrl: string | null; resumeUrl: string | null; resumeName: string | null };
 };
@@ -198,6 +198,14 @@ export async function getApprovedApplicant(corporationId: bigint, applicationId:
   const member: MemberDetail = {
     ...detail,
     email: "",
+    // Introductions go through staff: no way to reach the candidate directly.
+    mobile: "",
+    contactEmail: "",
+    postalCode: "",
+    state: "",
+    city: "",
+    street: "",
+    houseNumber: "",
     resume: detail.resume
       ? { ...detail.resume, passportMasked: "", religion: "", allergies: "", sensitiveConsentAt: null }
       : null,
@@ -209,8 +217,9 @@ export async function getApprovedApplicant(corporationId: bigint, applicationId:
     member,
     files: {
       photoUrl: a.individual.photoFileId ? `/api/files/${a.individual.photoFileId}` : null,
-      resumeUrl: a.individual.resumeFileId ? `/api/files/${a.individual.resumeFileId}` : null,
-      resumeName: a.individual.resumeFile?.originalName ?? null,
+      // The uploaded résumé usually carries a phone number and address, so it stays with staff.
+      resumeUrl: null,
+      resumeName: null,
     },
   };
 }

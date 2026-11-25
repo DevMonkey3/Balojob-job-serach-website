@@ -2,20 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Building2Icon, GraduationCapIcon, MenuIcon, SearchIcon, XIcon } from "lucide-react";
+import { Building2Icon, GraduationCapIcon, ListChecksIcon, LogInIcon, MenuIcon, SearchIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // The header's menu on phones (the inline links are hidden below md). A plain
-// toggle and a panel under the header — no dialog library, so the public
-// pages ship no extra JavaScript for it. Closes on a link, Escape, or a
-// click elsewhere.
+// toggle and a panel under the header: no dialog library, so the public pages
+// ship no extra JavaScript for it. Closes on a link, Escape, or a click elsewhere.
 
 const links = [
-  { href: "/#jobs", label: "求人を探す", en: "Find jobs", icon: SearchIcon },
-  { href: "/#schools", label: "学校を探す", en: "Find schools", icon: GraduationCapIcon },
-  { href: "/#companies", label: "企業・学校の方へ", en: "For companies & schools", icon: Building2Icon },
+  { href: "/jobs", label: "求人を探す", en: "Find jobs", icon: SearchIcon },
+  { href: "/schools", label: "学校を探す", en: "Find schools", icon: GraduationCapIcon },
+  { href: "/#flow", label: "ご利用の流れ", en: "How it works", icon: ListChecksIcon },
+  { href: "/#companies", label: "企業の方へ", en: "For companies", icon: Building2Icon },
+  { href: "/login?as=employer", label: "企業ログイン", en: "Company log in", icon: LogInIcon },
 ];
-// Register / log in / My Page / log out stay in the header itself (HeaderAuth),
+// Log in / register / My Page / log out stay in the header itself (HeaderAuth),
 // which knows who is signed in; this panel is the same for everyone.
 
 export function MobileNav() {
@@ -41,6 +42,7 @@ export function MobileNav() {
       <Button
         variant="ghost"
         size="icon-lg"
+        className="size-10"
         aria-label={open ? "メニューを閉じる" : "メニューを開く"}
         aria-expanded={open}
         aria-controls="site-menu"

@@ -15,7 +15,6 @@ export default function ReviewsPage({ searchParams }: { searchParams: Promise<Se
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        screenId="MVP"
         title="審査待ち一覧"
         titleEn="Review queue"
         description="承認すると公開・紹介されます。差戻しは理由が申請者に表示されます。"

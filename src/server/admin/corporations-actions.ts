@@ -19,6 +19,7 @@ import {
   type ActionState,
   redirectTarget,
 } from "@/server/admin/form";
+import { adminPath } from "@/server/admin/path";
 import {
   createCorporation,
   deleteCorporation,
@@ -26,7 +27,8 @@ import {
   updateCorporation,
 } from "@/server/admin/corporations";
 
-const listPath = (kind: CorporationKind) => (kind === "company" ? "/admin/companies" : "/admin/schools");
+/** The list screen as a path inside the console. */
+const listPath = (kind: CorporationKind) => (kind === "company" ? "/companies" : "/schools");
 
 // Only the labels differ between the two screens (ERR0002: 会社名 / 学校名が入力されていません).
 const corporationSchema = (kind: CorporationKind) =>
@@ -41,6 +43,7 @@ const corporationSchema = (kind: CorporationKind) =>
     headcount: int(0, 2_000_000_000),
     industry: str(120),
     url: str(200),
+    licenseNo: str(100),
     postalCode: str(20),
     prefecture: str(50),
     city: str(50),
@@ -102,7 +105,7 @@ async function saveCorporation(kind: CorporationKind, formData: FormData): Promi
   }
 
   updateTag("listings");
-  redirect(`${listPath(kind)}/${corporationId}?saved=${id ? "1" : "created"}`);
+  redirect(adminPath(`${listPath(kind)}/${corporationId}?saved=${id ? "1" : "created"}`));
 }
 
 /** BHALO803 / 807 [削除]: removes the login, which takes the corporation and its postings with it. */
@@ -113,7 +116,8 @@ async function removeCorporation(kind: CorporationKind, formData: FormData) {
   if (!(await deleteCorporation(kind, id))) return;
   await audit(staff.id, "delete", "corporations", id);
   updateTag("listings");
-  revalidatePath(listPath(kind));
+  // revalidatePath takes the route file path, which stays /admin/... whatever ADMIN_PATH is.
+  revalidatePath(`/admin${listPath(kind)}`);
   const to = redirectTarget(formData);
   if (to) redirect(to);
 }

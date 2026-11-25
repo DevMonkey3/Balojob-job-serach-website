@@ -57,13 +57,12 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function Group({ title, screenId, children }: { title: string; screenId?: string; children: React.ReactNode }) {
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           {title}
-          {screenId && <span className="font-mono text-xs font-normal text-muted-foreground">{screenId}</span>}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -106,7 +105,7 @@ export function CandidateProfileView({ member: m, files, showContact = false, ba
           </div>
           <div className="flex flex-1 flex-col gap-2">
             <div>
-              <p className="font-mono text-xs text-muted-foreground">{m.memberNo}</p>
+              <p className="text-xs text-muted-foreground">会員番号 {m.memberNo}</p>
               <h2 className="text-2xl font-bold">{m.fullName}</h2>
               {m.nameKana && <p className="text-sm text-muted-foreground">{m.nameKana}</p>}
             </div>
@@ -136,7 +135,7 @@ export function CandidateProfileView({ member: m, files, showContact = false, ba
         </CardContent>
       </Card>
 
-      <Group title="基本情報" screenId="BHALO010">
+      <Group title="基本情報">
         <Row label="配偶者" value={yesNo(m.hasSpouse)} />
         <Row label="子供" value={yesNo(m.hasChildren)} />
         <Row label="子供人数" value={m.childrenCount === null ? "" : `${m.childrenCount}人`} />
@@ -144,7 +143,7 @@ export function CandidateProfileView({ member: m, files, showContact = false, ba
       </Group>
 
       {showContact && (
-        <Group title="連絡先・住所" screenId="BHALO011">
+        <Group title="連絡先・住所">
           <Row label="携帯番号" value={m.mobile} />
           <Row label="メールアドレス" value={m.contactEmail} />
           <Row label="住所" value={address} />
@@ -152,14 +151,14 @@ export function CandidateProfileView({ member: m, files, showContact = false, ba
       )}
 
       {(m.visaStatus || m.visaExpiry) && (
-        <Group title="VISA情報" screenId="BHALO013">
+        <Group title="VISA情報">
           <Row label="ステータス" value={m.visaStatus} />
           <Row label="有効期限" value={m.visaExpiry ? fmtMonth(m.visaExpiry) : ""} />
         </Group>
       )}
 
       {m.introduction && (
-        <Group title="自己紹介" screenId="BHALO018">
+        <Group title="自己紹介">
           <Row label="自己紹介" value={m.introduction} />
         </Group>
       )}
@@ -172,7 +171,6 @@ export function CandidateProfileView({ member: m, files, showContact = false, ba
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 {section.title}
-                <span className="font-mono text-xs font-normal text-muted-foreground">{section.screenId}</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -202,7 +200,7 @@ export function CandidateProfileView({ member: m, files, showContact = false, ba
       })}
 
       {r && (
-        <Group title="履歴書情報" screenId="BHALO201">
+        <Group title="履歴書情報">
           <Row label="身長" value={r.heightCm ? `${r.heightCm} cm` : ""} />
           <Row label="体重" value={r.weightKg ? `${r.weightKg} kg` : ""} />
           <Row label="血液型" value={r.bloodType} />

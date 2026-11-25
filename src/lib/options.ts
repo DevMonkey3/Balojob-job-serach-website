@@ -85,7 +85,7 @@ export const options = {
   // 18 学校種別
   schoolGender: opts("共学", "男子校", "女子校"),
   // 21 種別(求人)
-  jobCategory: opts("技人国", "特定技能", "技能実習"),
+  jobCategory: opts("技人国", "特定技能", "育成就労"),
   // 22 種別(学校)
   schoolCategory: opts("大学・大学院", "専門学校", "日本語学校"),
 } satisfies Record<string, Option[]>;

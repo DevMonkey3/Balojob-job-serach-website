@@ -38,8 +38,8 @@ export function ResumeUploadCard({ file }: { file: ResumeFile | null }) {
           <span className="text-sm font-normal text-muted-foreground">Résumé file</span>
         </CardTitle>
         <CardDescription>
-          PDF・JPG・PNG、10MBまで。スタッフの確認後、承認された応募先の企業にのみ共有されます。
-          <span className="block">PDF, JPG or PNG up to 10MB. Shared only with companies after staff approval.</span>
+          PDF・JPG・PNG、10MBまで。バロジョブのスタッフのみが確認します。企業には共有されません。
+          <span className="block">PDF, JPG or PNG up to 10MB. Only Bhalojob staff can open it.</span>
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">

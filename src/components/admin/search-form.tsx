@@ -1,10 +1,11 @@
-import Link from "next/link";
 import { SearchIcon } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { AdminLink } from "@/components/admin/admin-path";
 
 /**
  * Filter bar for list screens. A GET form, so the filters live in the URL and
  * the page can be bookmarked or shared. Empty filters mean "all".
+ * `clearHref` is the list's path inside the console ("/jobs").
  */
 export function SearchForm({ clearHref, children }: { clearHref: string; children: React.ReactNode }) {
   return (
@@ -15,9 +16,9 @@ export function SearchForm({ clearHref, children }: { clearHref: string; childre
           <SearchIcon />
           検索
         </Button>
-        <Link href={clearHref} className={buttonVariants({ variant: "ghost" })}>
+        <AdminLink href={clearHref} className={buttonVariants({ variant: "ghost" })}>
           クリア
-        </Link>
+        </AdminLink>
       </div>
     </form>
   );

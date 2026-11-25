@@ -31,6 +31,7 @@ const companySchema = z.object({
   headcount: int(0, 2_000_000_000),
   industry: str(120),
   url: str(200),
+  licenseNo: str(100),
   postalCode: str(20),
   prefecture: str(50),
   city: str(50),

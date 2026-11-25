@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FileTextIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { AdminLink } from "@/components/admin/admin-path";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { Flash } from "@/components/admin/flash";
 import { MemberForm } from "@/components/admin/members/member-form";
@@ -84,7 +84,6 @@ async function EditMember({ params, searchParams }: Props) {
   return (
     <>
       <PageHeader
-        screenId="BHALO806"
         title="個人会員の編集"
         titleEn="Edit individual member"
         description={[
@@ -96,18 +95,18 @@ async function EditMember({ params, searchParams }: Props) {
           .join(" ・ ")}
       >
         <ReviewBadge kind="candidate" status={submitted ? review.reviewStatus : "draft"} reason={review.rejectionReason} />
-        <Link href={`/admin/reviews/candidates/${member.id}`} className={buttonVariants({ variant: "outline" })}>
+        <AdminLink href={`/reviews/candidates/${member.id}`} className={buttonVariants({ variant: "outline" })}>
           <FileTextIcon />
           審査画面で履歴書を見る
-        </Link>
+        </AdminLink>
         {canReview && (
-          <ReviewActions target="candidate" id={member.id} targetLabel="候補者プロフィール" redirectTo={`/admin/members/${member.id}`} size="default" />
+          <ReviewActions target="candidate" id={member.id} targetLabel="候補者プロフィール" redirectTo={`/members/${member.id}`} size="default" />
         )}
         {hasPermission(staff, "delete") && (
           <DeleteButton
             action={deleteMemberAction}
             id={member.id}
-            redirectTo="/admin/members"
+            redirectTo="/members"
             message="この個人会員情報を削除します。よろしいですか？"
             variant="outline"
             size="default"

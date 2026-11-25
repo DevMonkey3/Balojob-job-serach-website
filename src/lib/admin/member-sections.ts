@@ -131,7 +131,7 @@ export const memberSections: SectionDef[] = [
     key: "jobWishes",
     title: "求職希望",
     screenId: "BHALO021–023",
-    description: "技人国・特定技能・技能実習の希望。特定技能試験は種別が特定技能の行でのみ保存されます。",
+    description: "技人国・特定技能・育成就労の希望。特定技能試験は種別が特定技能の行でのみ保存されます。",
     fields: [
       { name: "track", label: "種別", type: "select", options: "track", required: true, width: "w-32" },
       { name: "desiredJob", label: "希望職種", type: "text", options: "industry", maxLength: 120, width: "w-48" },

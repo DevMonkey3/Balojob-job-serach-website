@@ -159,11 +159,11 @@ function StepForm({ flowId, step }: { flowId: FlowId; step: StepDef }) {
   return (
     <form onSubmit={onNext} noValidate className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
-            {flow.title}：ステップ {position}/{visible.length}
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-semibold">{flow.title}</span>
+          <span className="tabular-nums text-muted-foreground">
+            ステップ <span className="font-bold text-primary">{position}</span> / {visible.length}
           </span>
-          <span className="font-mono text-xs">{step.screenId}</span>
         </div>
         <Progress value={(position / visible.length) * 100} aria-label="進捗" />
       </div>

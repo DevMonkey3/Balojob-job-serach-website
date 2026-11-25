@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRightIcon, PlusIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AdminLink } from "@/components/admin/admin-path";
 import { Flash } from "@/components/admin/flash";
 import { OptionsEditor } from "@/components/admin/masters/options-editor";
 import { PageHeader } from "@/components/admin/page-header";
@@ -22,7 +22,6 @@ export default function OptionsPage({ searchParams }: { searchParams: Promise<Se
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        screenId="BHALO812"
         title="選択項目マスタメンテ"
         titleEn="Selection options"
         description="各画面のプルダウンに表示する項目。カテゴリごとにレベル1（親）とレベル2（子項目）の2階層です。"
@@ -51,15 +50,15 @@ async function OptionsMaster({ searchParams }: { searchParams: Promise<SearchPar
           <div className="flex flex-wrap gap-2">
             {categories.length === 0 && <span className="text-sm text-muted-foreground">カテゴリがありません。</span>}
             {categories.map((c) => (
-              <Link
+              <AdminLink
                 key={c.category}
-                href={`/admin/masters/options?category=${c.category}`}
+                href={`/masters/options?category=${c.category}`}
                 aria-current={c.category === category ? "page" : undefined}
                 className={cn(buttonVariants({ variant: c.category === category ? "default" : "outline", size: "sm" }), "font-mono")}
               >
                 {c.category}
                 <span className="opacity-70">({c.count})</span>
-              </Link>
+              </AdminLink>
             ))}
           </div>
         </div>
@@ -114,9 +113,9 @@ async function OptionsLevel({ category, sp }: { category: string; sp: SearchPara
             <ChevronRightIcon className="size-4 text-muted-foreground" aria-hidden />
             <span className="font-semibold">{parent.labelJa}</span>
             <Badge variant="secondary">レベル2（子項目）</Badge>
-            <Link href={`/admin/masters/options?category=${category}`} className="ml-auto text-primary hover:underline">
+            <AdminLink href={`/masters/options?category=${category}`} className="ml-auto text-primary hover:underline">
               レベル1へ戻る
-            </Link>
+            </AdminLink>
           </>
         ) : (
           <Badge variant="secondary">レベル1</Badge>

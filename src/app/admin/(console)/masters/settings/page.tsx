@@ -13,7 +13,7 @@ import { getSiteSettings } from "@/server/admin/masters";
 export default function SettingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader screenId="BHALO816" title="管理マスタメンテ" titleEn="Site settings" />
+      <PageHeader title="管理マスタメンテ" titleEn="Site settings" />
       <Suspense fallback={<TableSkeleton />}>
         <Settings searchParams={searchParams} />
       </Suspense>

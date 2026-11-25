@@ -59,6 +59,7 @@ async function MyPageWithData({ searchParams }: { searchParams: PageProps<"/mypa
       }
       applications={applications.map((a) => ({
         id: a.id,
+        jobId: a.jobId,
         appliedAt: formatDate(a.appliedAt),
         company: a.company,
         jobType: a.jobType,

@@ -42,7 +42,6 @@ async function CompanyInfo({ searchParams }: Props) {
   return (
     <>
       <PageHeader
-        screenId="BHALO111"
         title="企業情報"
         titleEn="Company profile"
         description={`${company.name} / 法人会員番号 ${company.memberNo}`}

@@ -46,7 +46,6 @@ async function EditJob({ params, searchParams }: Props) {
   return (
     <>
       <PageHeader
-        screenId="BHALO802"
         title="求人の編集"
         titleEn="Edit job posting"
         description={[
@@ -58,12 +57,12 @@ async function EditJob({ params, searchParams }: Props) {
           .join(" ・ ")}
       >
         <ReviewBadge status={job.reviewStatus} reason={job.rejectionReason} />
-        {canReview && <ReviewActions target="job" id={job.id} targetLabel="求人" redirectTo={`/admin/jobs/${job.id}`} size="default" />}
+        {canReview && <ReviewActions target="job" id={job.id} targetLabel="求人" redirectTo={`/jobs/${job.id}`} size="default" />}
         {hasPermission(staff, "delete") && (
           <DeleteButton
             action={deleteJobAction}
             id={job.id}
-            redirectTo="/admin/jobs"
+            redirectTo="/jobs"
             message="この求人情報を削除します。よろしいですか？"
             variant="outline"
             size="default"

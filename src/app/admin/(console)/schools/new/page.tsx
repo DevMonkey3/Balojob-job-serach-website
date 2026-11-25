@@ -8,7 +8,7 @@ import { requireStaff } from "@/server/auth/staff";
 export default function NewSchoolPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader screenId="BHALO808" title="新規学校の追加" titleEn="New school" />
+      <PageHeader title="新規学校の追加" titleEn="New school" />
       <Suspense fallback={<TableSkeleton />}>
         <NewSchoolForm />
       </Suspense>

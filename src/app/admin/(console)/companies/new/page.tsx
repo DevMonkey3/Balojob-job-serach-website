@@ -9,7 +9,7 @@ import { getOptionLabels } from "@/server/admin/options";
 export default function NewCompanyPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader screenId="BHALO804" title="新規企業の追加" titleEn="New company" />
+      <PageHeader title="新規企業の追加" titleEn="New company" />
       <Suspense fallback={<TableSkeleton />}>
         <NewCompanyForm />
       </Suspense>

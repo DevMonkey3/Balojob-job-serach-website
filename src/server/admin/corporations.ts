@@ -124,6 +124,8 @@ export type CorporationDetail = {
   headcount: number | null;
   industry: string;
   url: string;
+  /** 許可・登録番号. Shown to candidates beside the company name. */
+  licenseNo: string;
   postalCode: string;
   prefecture: string;
   city: string;
@@ -164,6 +166,7 @@ export async function getCorporation(kind: CorporationKind, id: bigint): Promise
     headcount: c.headcount,
     industry: c.industry ?? "",
     url: c.url ?? "",
+    licenseNo: c.licenseNo ?? "",
     postalCode: c.postalCode ?? "",
     prefecture: c.prefecture ?? "",
     city: c.city ?? "",
@@ -239,6 +242,7 @@ export type CorporationInput = {
   headcount?: number;
   industry?: string;
   url?: string;
+  licenseNo?: string;
   postalCode?: string;
   prefecture?: string;
   city?: string;
@@ -268,6 +272,7 @@ function corporationData(input: CorporationInput) {
     headcount: input.headcount ?? null,
     industry: input.industry ?? null,
     url: input.url ?? null,
+    licenseNo: input.licenseNo ?? null,
     postalCode: input.postalCode ?? null,
     prefecture: input.prefecture ?? null,
     city: input.city ?? null,

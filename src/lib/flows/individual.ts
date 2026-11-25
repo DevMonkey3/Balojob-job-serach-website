@@ -176,7 +176,7 @@ const steps: StepDef[] = [
             items: [
               { name: "engineer", label: "技人国での求職希望 (Engineer / Specialist)" },
               { name: "ssw", label: "特定技能での求職希望 (SSW)" },
-              { name: "titp", label: "技能実習での求職希望 (TITP)" },
+              { name: "titp", label: "育成就労での求職希望 (ESD)" },
             ],
           },
           {
@@ -236,9 +236,9 @@ const steps: StepDef[] = [
   {
     slug: "titp",
     screenId: "BHALO023",
-    title: "技能実習",
-    titleEn: "Technical Intern Training (TITP)",
-    description: "技能実習で希望のある方は入力してください",
+    title: "育成就労",
+    titleEn: "Employment for Skill Development (ESD)",
+    description: "育成就労で希望のある方は入力してください",
     kind: "rows",
     rowLabel: "希望",
     when: wants("titp"),

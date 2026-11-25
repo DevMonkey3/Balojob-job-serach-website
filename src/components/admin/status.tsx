@@ -38,10 +38,7 @@ export function EmptyRow({ colSpan }: { colSpan: number }) {
 export function TableSkeleton() {
   return (
     <div className="flex flex-col gap-6" aria-busy="true">
-      <div className="flex flex-col gap-2">
-        <div className="h-3 w-16 animate-pulse rounded bg-muted" />
-        <div className="h-8 w-56 animate-pulse rounded bg-muted" />
-      </div>
+      <div className="h-8 w-56 animate-pulse rounded bg-muted" />
       <div className="overflow-hidden rounded-xl border bg-background">
         <div className="h-10 border-b bg-muted/50" />
         {Array.from({ length: 6 }, (_, i) => (

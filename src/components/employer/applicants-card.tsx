@@ -15,9 +15,8 @@ export function ApplicantsCard({ applicants }: { applicants: ApplicantRow[] }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           応募者（スタッフ承認済み）
-          <span className="font-mono text-xs font-normal text-muted-foreground">BHALO200</span>
         </CardTitle>
-        <CardDescription>スタッフが承認した応募のみ表示されます。</CardDescription>
+        <CardDescription>スタッフが確認した応募のみ表示されます。面接の調整や連絡は担当スタッフが行います。</CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto">
         <Table>
@@ -61,7 +60,6 @@ export function ApplicantsCard({ applicants }: { applicants: ApplicantRow[] }) {
                     <FileTextIcon />
                     履歴書を見る
                   </Link>
-                  {a.hasResumeFile && <span className="ml-2 text-xs text-muted-foreground">ファイル有</span>}
                 </TableCell>
               </TableRow>
             ))}

@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
-import { PASSWORD_MIN_LENGTH } from "@/server/auth/password";
+import { passwordProblem } from "@/server/auth/password";
 import { requireStaffForAction } from "@/server/auth/staff";
 import { audit } from "@/server/admin/audit";
 import { INVALID_INPUT, bool, emailStr, parseForm, redirectTarget, reqStr, str, type ActionState } from "@/server/admin/form";
+import { adminPath } from "@/server/admin/path";
 import {
   createStaffUser,
   deleteStaffUser,
@@ -43,9 +44,8 @@ export async function saveStaffUserAction(_prev: ActionState, formData: FormData
 
   // Checks that need more than one field. A blank password on edit means "unchanged".
   const errors: Record<string, string> = {};
-  if (password !== undefined && password.length < PASSWORD_MIN_LENGTH) {
-    errors.password = `パスワードは${PASSWORD_MIN_LENGTH}文字以上にしてください`;
-  }
+  const weak = password === undefined ? null : passwordProblem(password, [email, name]);
+  if (weak) errors.password = weak;
   if (password !== undefined && password !== confirm) errors.confirm = "パスワードが一致しません";
 
   if (rawId) {
@@ -58,7 +58,7 @@ export async function saveStaffUserAction(_prev: ActionState, formData: FormData
 
     await updateStaffUser(id, input, password, id === staff.id);
     await audit(staff.id, "update", "users", id, { passwordChanged: password !== undefined });
-    redirect("/admin/users?saved=1");
+    redirect(adminPath("/users?saved=1"));
   }
 
   if (!email) errors.email = "ログインID（メールアドレス）が入力されていません";
@@ -76,7 +76,7 @@ export async function saveStaffUserAction(_prev: ActionState, formData: FormData
     throw e;
   }
   await audit(staff.id, "create", "users", userId);
-  redirect("/admin/users?saved=created");
+  redirect(adminPath("/users?saved=created"));
 }
 
 /** BHALO810 [削除]. The signed-in user cannot delete their own account. */
@@ -87,6 +87,7 @@ export async function deleteStaffUserAction(formData: FormData) {
   if (!(await getStaffUser(id))) return;
   await deleteStaffUser(id);
   await audit(staff.id, "delete", "users", id);
+  // revalidatePath takes the route file path, which stays /admin/... whatever ADMIN_PATH is.
   revalidatePath("/admin/users");
   const to = redirectTarget(formData);
   if (to) redirect(to);

@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { PlusIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminLink } from "@/components/admin/admin-path";
 import { EmptyRow, InactiveMark } from "@/components/admin/status";
 import { jobTrackLabels } from "@/lib/format";
 import type { CorporationJobRow, CorporationRecruitmentRow } from "@/server/admin/corporations";
@@ -12,13 +12,12 @@ import type { CorporationJobRow, CorporationRecruitmentRow } from "@/server/admi
 
 function RelatedCard({
   title,
-  screenId,
   addHref,
   addLabel,
   children,
 }: {
   title: string;
-  screenId: string;
+  /** Path inside the console. */
   addHref: string;
   addLabel: string;
   children: React.ReactNode;
@@ -26,15 +25,12 @@ function RelatedCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {title}
-          <span className="font-mono text-xs font-normal text-muted-foreground">{screenId}</span>
-        </CardTitle>
+        <CardTitle>{title}</CardTitle>
         <CardAction>
-          <Link href={addHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
+          <AdminLink href={addHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
             <PlusIcon />
             {addLabel}
-          </Link>
+          </AdminLink>
         </CardAction>
       </CardHeader>
       <CardContent>{children}</CardContent>
@@ -44,7 +40,7 @@ function RelatedCard({
 
 export function CompanyJobsCard({ memberNo, jobs }: { memberNo: string; jobs: CorporationJobRow[] }) {
   return (
-    <RelatedCard title="求人情報" screenId="BHALO115" addHref={`/admin/jobs/new?memberNo=${memberNo}`} addLabel="新規求人の追加">
+    <RelatedCard title="求人情報" addHref={`/jobs/new?memberNo=${memberNo}`} addLabel="新規求人の追加">
       <Table>
         <TableHeader>
           <TableRow>
@@ -60,9 +56,9 @@ export function CompanyJobsCard({ memberNo, jobs }: { memberNo: string; jobs: Co
           {jobs.map((j) => (
             <TableRow key={j.id}>
               <TableCell className="text-right tabular-nums">
-                <Link href={`/admin/jobs/${j.id}`} className="text-primary hover:underline">
+                <AdminLink href={`/jobs/${j.id}`} className="text-primary hover:underline">
                   {j.jobNo}
-                </Link>
+                </AdminLink>
               </TableCell>
               <TableCell>{jobTrackLabels[j.track]}</TableCell>
               <TableCell>{j.industry}</TableCell>
@@ -88,8 +84,7 @@ export function SchoolRecruitmentsCard({
   return (
     <RelatedCard
       title="生徒募集情報"
-      screenId="BHALO155"
-      addHref={`/admin/recruitments/new?memberNo=${memberNo}`}
+      addHref={`/recruitments/new?memberNo=${memberNo}`}
       addLabel="生徒募集の追加"
     >
       <Table>
@@ -107,9 +102,9 @@ export function SchoolRecruitmentsCard({
           {recruitments.map((r) => (
             <TableRow key={r.id}>
               <TableCell className="text-right tabular-nums">
-                <Link href={`/admin/recruitments/${r.id}`} className="text-primary hover:underline">
+                <AdminLink href={`/recruitments/${r.id}`} className="text-primary hover:underline">
                   {r.recruitmentNo}
-                </Link>
+                </AdminLink>
               </TableCell>
               <TableCell>{r.faculty}</TableCell>
               <TableCell>{r.department}</TableCell>

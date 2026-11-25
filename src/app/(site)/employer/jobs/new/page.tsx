@@ -14,7 +14,6 @@ export default function NewEmployerJobPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        screenId="BHALO116"
         title="新規求人の登録"
         titleEn="New job posting"
         description="登録した求人はスタッフの審査後にサイトへ掲載されます。"

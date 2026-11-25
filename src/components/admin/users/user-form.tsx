@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminPath } from "@/components/admin/admin-path";
 import { CheckboxField, FieldGroup, HiddenField, TextField } from "@/components/admin/fields";
 import { useFieldError } from "@/components/admin/form-context";
 import { FormShell } from "@/components/admin/form-shell";
@@ -17,11 +18,12 @@ export function UserForm({
   self: boolean;
   passwordMinLength: number;
 }) {
+  const admin = useAdminPath();
   return (
-    <FormShell action={saveStaffUserAction} cancelHref="/admin/users" submitLabel={user ? "更新" : "登録"}>
+    <FormShell action={saveStaffUserAction} cancelHref={admin("/users")} submitLabel={user ? "更新" : "登録"}>
       {user && <HiddenField name="id" value={user.id} />}
 
-      <FieldGroup title="ユーザ情報" screenId="BHALO811">
+      <FieldGroup title="ユーザ情報">
         <TextField name="name" label="ユーザ名" required maxLength={80} defaultValue={user?.name} autoComplete="off" />
         {user ? (
           <TextField

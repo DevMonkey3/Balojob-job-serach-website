@@ -43,7 +43,6 @@ async function EditRecruitment({ params, searchParams }: Props) {
   return (
     <>
       <PageHeader
-        screenId="BHALO156"
         title="生徒募集の編集"
         titleEn="Edit student recruitment"
         description={`${recruitment.schoolName} / 募集番号 ${recruitment.recruitmentNo} ・ 最終更新 ${fmtDateTime(recruitment.updatedAt)}`}
@@ -52,7 +51,7 @@ async function EditRecruitment({ params, searchParams }: Props) {
           <DeleteButton
             action={deleteRecruitmentAction}
             id={recruitment.id}
-            redirectTo="/admin/recruitments"
+            redirectTo="/recruitments"
             message="この生徒募集情報を削除します。よろしいですか？"
             variant="outline"
             size="default"

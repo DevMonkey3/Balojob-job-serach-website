@@ -14,7 +14,6 @@ export default function NumberingPage({ searchParams }: { searchParams: Promise<
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        screenId="BHALO814"
         title="採番マスタメンテ"
         titleEn="Numbering"
         description="会員番号の採番状況。仕様書の採番マスタはデータベースのシーケンスに置き換えています。"

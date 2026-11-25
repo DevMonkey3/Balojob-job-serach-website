@@ -7,6 +7,10 @@ import { requireStaffForAction } from "@/server/auth/staff";
 import { deleteApplication, getApplication, updateApplication } from "@/server/admin/applications";
 import { audit } from "@/server/admin/audit";
 import { INVALID_INPUT, enumOf, idStr, parseForm, parseId, redirectTarget, str, type ActionState } from "@/server/admin/form";
+import { adminPath } from "@/server/admin/path";
+
+// redirect() takes a console address (adminPath); revalidatePath() takes the
+// route file path, which stays /admin/... whatever ADMIN_PATH is.
 
 const schema = z.object({
   id: idStr,
@@ -28,7 +32,7 @@ export async function updateApplicationAction(_prev: ActionState, formData: Form
   await updateApplication(applicationId, { status, staffNote });
   await audit(staff.id, "update", "applications", applicationId, { status });
 
-  redirect(`/admin/applications/${applicationId}?saved=1`);
+  redirect(adminPath(`/applications/${applicationId}?saved=1`));
 }
 
 export async function deleteApplicationAction(formData: FormData) {

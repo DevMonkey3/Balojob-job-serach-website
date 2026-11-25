@@ -3,32 +3,24 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
-import { PASSWORD_MIN_LENGTH, hashPassword, verifyPassword } from "@/server/auth/password";
+import { hashPassword, passwordProblem, verifyAgainstNothing, verifyPassword } from "@/server/auth/password";
+import { LOGIN_ID, LOGIN_IP, TOO_MANY_ATTEMPTS, clear, clientIp, isBlocked, record } from "@/server/auth/throttle";
 import { createStaffSession, destroyStaffSession } from "@/server/auth/staff";
 import { audit } from "@/server/admin/audit";
-import { emailStr, parseForm, reqStr, type ActionState } from "@/server/admin/form";
+import { emailStr, nameStr, parseForm, reqStr, type ActionState } from "@/server/admin/form";
+import { adminPath, requireConsoleRequest } from "@/server/admin/path";
 import { db } from "@/server/db";
 
-// Per-process brake on password guessing. Enough for one server; on AWS this
-// moves to ElastiCache so every task shares the count.
-const failures = new Map<string, { count: number; until: number }>();
-const MAX_FAILURES = 10;
-const LOCK_MS = 15 * 60 * 1000;
+// Every action here starts with requireConsoleRequest(): a server action can
+// be posted to any page of the site, and these must only answer (and only
+// redirect to the console) for requests that came in through its address.
 
-function locked(key: string) {
-  const f = failures.get(key);
-  return !!f && f.count >= MAX_FAILURES && f.until > Date.now();
-}
-
-function recordFailure(key: string) {
-  const f = failures.get(key);
-  if (f && f.until > Date.now()) f.count += 1;
-  else failures.set(key, { count: 1, until: Date.now() + LOCK_MS });
-}
+// Password guessing is slowed down in src/server/auth/throttle.ts.
 
 const WRONG = "ログインIDまたはパスワードが誤っています";
 
 export async function loginStaffAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireConsoleRequest();
   const parsed = parseForm(
     z.object({ email: reqStr("ログインID", 254), password: reqStr("パスワード", 200) }),
     formData,
@@ -36,49 +28,51 @@ export async function loginStaffAction(_prev: ActionState, formData: FormData): 
   if (parsed.errors) return { errors: parsed.errors };
 
   const email = parsed.data.email.toLowerCase();
-  if (locked(email)) return { message: "試行回数が多すぎます。15分後に再度お試しください。" };
+  const idKey = `staff:${email}`;
+  const ipKey = `staff-ip:${await clientIp()}`;
+  if (isBlocked(idKey, LOGIN_ID.max) || isBlocked(ipKey, LOGIN_IP.max)) return { message: TOO_MANY_ATTEMPTS };
 
   const user = await db.user.findUnique({
     where: { email },
     include: { staffCredential: true, staffProfile: true },
   });
-  const ok =
-    user?.accountType === "staff" &&
-    user.isActive &&
-    user.staffCredential &&
-    user.staffProfile &&
-    (await verifyPassword(parsed.data.password, user.staffCredential.passwordHash));
+  const usable =
+    user?.accountType === "staff" && user.isActive && user.staffProfile ? user.staffCredential : null;
+  const ok = usable
+    ? await verifyPassword(parsed.data.password, usable.passwordHash)
+    : await verifyAgainstNothing(parsed.data.password);
 
-  if (!ok) {
-    recordFailure(email);
+  if (!ok || !user) {
+    record(idKey, LOGIN_ID.windowMs);
+    record(ipKey, LOGIN_IP.windowMs);
     return { message: WRONG };
   }
 
-  failures.delete(email);
+  clear(idKey);
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await createStaffSession(user.id);
   await audit(user.id, "login", "users", user.id);
-  redirect("/admin");
+  redirect(adminPath());
 }
 
 export async function logoutStaffAction() {
+  await requireConsoleRequest();
   await destroyStaffSession();
-  redirect("/admin/login");
+  redirect(adminPath("/login"));
 }
 
 const setupSchema = z
   .object({
-    name: reqStr("ユーザ名", 80),
+    name: nameStr("ユーザ名", 80),
     email: emailStr.pipe(z.string({ error: "ログインID（メールアドレス）が入力されていません" })),
-    password: reqStr("パスワード", 200).pipe(
-      z.string().min(PASSWORD_MIN_LENGTH, `パスワードは${PASSWORD_MIN_LENGTH}文字以上にしてください`),
-    ),
+    password: reqStr("パスワード", 200),
     confirm: reqStr("パスワードの確認入力", 200),
   })
   .refine((d) => d.password === d.confirm, { path: ["confirm"], message: "パスワードが一致しません" });
 
 /** Creates the first Administrator. Only works while no staff account exists. */
 export async function setupFirstAdminAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireConsoleRequest();
   if ((await db.user.count({ where: { accountType: "staff" } })) > 0) {
     return { message: "管理者は既に登録されています。ログインしてください。" };
   }
@@ -86,6 +80,8 @@ export async function setupFirstAdminAction(_prev: ActionState, formData: FormDa
   const parsed = parseForm(setupSchema, formData);
   if (parsed.errors) return { errors: parsed.errors };
   const { name, email, password } = parsed.data;
+  const weak = passwordProblem(password, [email, name]);
+  if (weak) return { errors: { password: weak } };
 
   let userId: string;
   try {
@@ -110,5 +106,5 @@ export async function setupFirstAdminAction(_prev: ActionState, formData: FormDa
 
   await createStaffSession(userId);
   await audit(userId, "create", "users", userId, { setup: true });
-  redirect("/admin");
+  redirect(adminPath());
 }

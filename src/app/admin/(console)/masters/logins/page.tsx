@@ -21,7 +21,6 @@ export default function LoginsPage({ searchParams }: { searchParams: Promise<Sea
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        screenId="BHALO813"
         title="ログインマスタメンテ"
         titleEn="Logins"
         description="個人・法人・スタッフすべてのログイン情報。パスワードはハッシュ化して保存されるため表示できません（仕様書の「パスワード表示」は実装しません）。"
@@ -49,7 +48,7 @@ async function LoginsList({ searchParams }: { searchParams: Promise<SearchParams
     <>
       <Flash saved={param(sp, "saved")} />
 
-      <SearchForm clearHref="/admin/masters/logins">
+      <SearchForm clearHref="/masters/logins">
         <SelectField name="accountType" label="個人法人区分" options={accountTypeOptions} defaultValue={filters.accountType} placeholder="すべて" />
         <TextField name="memberNo" label="会員番号" defaultValue={filters.memberNo} hint="部分一致" />
         <TextField name="email" label="メールアドレス" defaultValue={filters.email} hint="部分一致" />
@@ -113,7 +112,7 @@ async function LoginsList({ searchParams }: { searchParams: Promise<SearchParams
         </Table>
       </div>
 
-      <Pagination pathname="/admin/masters/logins" searchParams={sp} page={page} pageCount={pageCount} total={total} pageSize={LOGIN_PAGE_SIZE} />
+      <Pagination pathname="/masters/logins" searchParams={sp} page={page} pageCount={pageCount} total={total} pageSize={LOGIN_PAGE_SIZE} />
     </>
   );
 }

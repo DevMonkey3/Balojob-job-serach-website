@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { AdminLink } from "@/components/admin/admin-path";
 import { cn } from "@/lib/utils";
 
 export type SearchParams = Record<string, string | string[] | undefined>;
@@ -35,6 +35,7 @@ export function Pagination({
   total,
   pageSize,
 }: {
+  /** The list's path inside the console ("/jobs"). */
   pathname: string;
   searchParams: SearchParams;
   page: number;
@@ -50,9 +51,9 @@ export function Pagination({
         {children}
       </span>
     ) : (
-      <Link href={href(pathname, searchParams, p)} className={buttonVariants({ variant: "outline", size: "sm" })} aria-label={label}>
+      <AdminLink href={href(pathname, searchParams, p)} className={buttonVariants({ variant: "outline", size: "sm" })} aria-label={label}>
         {children}
-      </Link>
+      </AdminLink>
     );
 
   return (

@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { PencilIcon, PlusIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminLink } from "@/components/admin/admin-path";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { SelectField, TextField } from "@/components/admin/fields";
 import { Flash } from "@/components/admin/flash";
@@ -21,11 +21,11 @@ import { deleteJobAction } from "@/server/admin/jobs-actions";
 export default function JobsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader screenId="BHALO801" title="求人一覧" titleEn="Job postings">
-        <Link href="/admin/jobs/new" className={buttonVariants()}>
+      <PageHeader title="求人一覧" titleEn="Job postings">
+        <AdminLink href="/jobs/new" className={buttonVariants()}>
           <PlusIcon />
           新規求人の追加
-        </Link>
+        </AdminLink>
       </PageHeader>
       <Suspense fallback={<TableSkeleton />}>
         <JobsList searchParams={searchParams} />
@@ -54,7 +54,7 @@ async function JobsList({ searchParams }: { searchParams: Promise<SearchParams> 
     <>
       <Flash saved={param(sp, "saved")} />
 
-      <SearchForm clearHref="/admin/jobs">
+      <SearchForm clearHref="/jobs">
         <TextField name="company" label="会社名" defaultValue={filters.company} />
         <TextField name="industry" label="業種" defaultValue={filters.industry} />
         <TextField name="jobType" label="職種" defaultValue={filters.jobType} />
@@ -77,7 +77,7 @@ async function JobsList({ searchParams }: { searchParams: Promise<SearchParams> 
               <TableHead className="text-right">給与</TableHead>
               <TableHead className="text-center">技人国</TableHead>
               <TableHead className="text-center">特定技能</TableHead>
-              <TableHead className="text-center">技能実習</TableHead>
+              <TableHead className="text-center">育成就労</TableHead>
               <TableHead className="text-center">非アクティブ</TableHead>
               <TableHead>審査</TableHead>
               <TableHead className="text-right">操作</TableHead>
@@ -88,9 +88,9 @@ async function JobsList({ searchParams }: { searchParams: Promise<SearchParams> 
             {rows.map((j) => (
               <TableRow key={j.id}>
                 <TableCell className="font-mono text-xs">
-                  <Link href={`/admin/companies/${j.corporation.id}`} className="text-primary hover:underline">
+                  <AdminLink href={`/companies/${j.corporation.id}`} className="text-primary hover:underline">
                     {j.corporation.memberNo}
-                  </Link>
+                  </AdminLink>
                 </TableCell>
                 <TableCell>{j.corporation.name}</TableCell>
                 <TableCell className="text-right tabular-nums">{j.jobNo}</TableCell>
@@ -107,10 +107,10 @@ async function JobsList({ searchParams }: { searchParams: Promise<SearchParams> 
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
-                    <Link href={`/admin/jobs/${j.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                    <AdminLink href={`/jobs/${j.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
                       <PencilIcon />
                       編集
-                    </Link>
+                    </AdminLink>
                     {canDelete && (
                       <DeleteButton action={deleteJobAction} id={j.id} message="この求人情報を削除します。よろしいですか？" />
                     )}
@@ -122,7 +122,7 @@ async function JobsList({ searchParams }: { searchParams: Promise<SearchParams> 
         </Table>
       </div>
 
-      <Pagination pathname="/admin/jobs" searchParams={sp} page={page} pageCount={pageCount} total={total} pageSize={JOB_PAGE_SIZE} />
+      <Pagination pathname="/jobs" searchParams={sp} page={page} pageCount={pageCount} total={total} pageSize={JOB_PAGE_SIZE} />
     </>
   );
 }

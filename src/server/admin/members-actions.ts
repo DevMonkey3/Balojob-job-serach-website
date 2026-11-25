@@ -22,6 +22,7 @@ import {
   type ActionState,
   redirectTarget,
 } from "@/server/admin/form";
+import { adminPath } from "@/server/admin/path";
 import {
   EmailTakenError,
   createMember,
@@ -192,8 +193,9 @@ export async function saveMemberAction(_prev: ActionState, formData: FormData): 
     throw e;
   }
 
+  // revalidatePath takes the route file path, which stays /admin/... whatever ADMIN_PATH is.
   revalidatePath("/admin/members");
-  redirect(`/admin/members/${memberId}?saved=${id ? "1" : "created"}`);
+  redirect(adminPath(`/members/${memberId}?saved=${id ? "1" : "created"}`));
 }
 
 /** BHALO805 [削除]: removes the login, which cascades to the profile and its child rows. */
@@ -227,5 +229,5 @@ export async function saveMemberSectionAction(_prev: ActionState, formData: Form
   await replaceSectionRows(id, built.payload);
   await audit(staff.id, "update", "individuals", id, { section });
 
-  redirect(`/admin/members/${id}?saved=1#${section}`);
+  redirect(adminPath(`/members/${id}?saved=1#${section}`));
 }

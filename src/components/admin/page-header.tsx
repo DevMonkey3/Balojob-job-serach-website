@@ -1,11 +1,11 @@
 export function PageHeader({
-  screenId,
   title,
   titleEn,
   description,
   children,
 }: {
-  screenId: string;
+  /** @deprecated The design-document ID is no longer shown. Accepted and ignored; remove it from callers. */
+  screenId?: string;
   title: string;
   titleEn?: string;
   description?: string;
@@ -15,7 +15,6 @@ export function PageHeader({
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p className="font-mono text-xs text-muted-foreground">{screenId}</p>
         <h1 className="text-2xl font-bold">
           {title}
           {titleEn && <span className="ml-2 text-base font-normal text-muted-foreground">{titleEn}</span>}

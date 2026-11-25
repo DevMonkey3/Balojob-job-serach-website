@@ -17,6 +17,7 @@ import {
   type ActionState,
   redirectTarget,
 } from "@/server/admin/form";
+import { adminPath } from "@/server/admin/path";
 import { findCorporationByMemberNo } from "@/server/admin/jobs";
 import {
   createRecruitment,
@@ -69,7 +70,7 @@ export async function saveRecruitmentAction(_prev: ActionState, formData: FormDa
   }
 
   updateTag("listings");
-  redirect(`/admin/recruitments/${recruitmentId}?saved=${id ? "1" : "created"}`);
+  redirect(adminPath(`/recruitments/${recruitmentId}?saved=${id ? "1" : "created"}`));
 }
 
 /** BHALO809 [削除]. */
@@ -80,6 +81,7 @@ export async function deleteRecruitmentAction(formData: FormData) {
   await deleteRecruitment(id);
   await audit(staff.id, "delete", "recruitments", id);
   updateTag("listings");
+  // revalidatePath takes the route file path, which stays /admin/... whatever ADMIN_PATH is.
   revalidatePath("/admin/recruitments");
   const to = redirectTarget(formData);
   if (to) redirect(to);

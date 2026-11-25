@@ -66,7 +66,6 @@ function TargetForm({ initial, onDone }: { initial: Values; onDone: (v: Values, 
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
       <Card>
         <CardHeader>
-          <p className="font-mono text-xs text-muted-foreground">BHALO110</p>
           <CardTitle className="text-xl">
             対象企業・学校選択 <span className="text-base font-normal text-muted-foreground">Organisation type</span>
           </CardTitle>

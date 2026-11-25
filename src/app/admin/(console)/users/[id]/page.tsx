@@ -35,7 +35,6 @@ async function EditUser({ params }: Props) {
   return (
     <>
       <PageHeader
-        screenId="BHALO811"
         title="ユーザの編集"
         titleEn="Edit staff user"
         description={`${user.email} ・ 最終ログイン ${fmtDateTime(user.lastLoginAt) || "なし"} ・ 最終更新 ${fmtDateTime(user.updatedAt)}`}
@@ -44,7 +43,7 @@ async function EditUser({ params }: Props) {
           <DeleteButton
             action={deleteStaffUserAction}
             id={user.id}
-            redirectTo="/admin/users"
+            redirectTo="/users"
             message="このユーザを削除します。よろしいですか？"
             variant="outline"
             size="default"

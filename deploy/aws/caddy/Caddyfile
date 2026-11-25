@@ -1,0 +1,53 @@
+# Caddy in front of the Bhalojob app (docker-compose.yml, service "caddy").
+#
+# {$DOMAIN} is DOMAIN from /etc/bhalojob/bhalojob.env. Caddy gets a Let's
+# Encrypt certificate for it by itself, renews it, and redirects HTTP to HTTPS.
+# For that to work the domain's A record must point at this server and ports
+# 80 and 443 must be open.
+#
+# After editing this file:  sudo bash deploy/aws/update.sh --no-pull
+
+{
+	# HTTP/1.1 and HTTP/2. HTTP/3 would also need UDP port 443 opened in the
+	# security group and published in docker-compose.yml.
+	servers {
+		protocols h1 h2
+	}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Uploads are 10 MB at most and the app accepts 11 MB per request
+	# (serverActions.bodySizeLimit in next.config.ts). Anything bigger stops here.
+	request_body {
+		max_size 12MB
+	}
+
+	header {
+		# One year of HTTPS-only for this host. Subdomains are left alone on purpose.
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		# "?" = only when the app did not send its own policy.
+		?Content-Security-Policy "frame-ancestors 'self'"
+		-Server
+		-X-Powered-By
+	}
+
+	# Build files have a hash in their name and never change. Next.js already
+	# sends this header for them; this only fills it in if it is ever missing.
+	@static path /_next/static/*
+	header @static ?Cache-Control "public, max-age=31536000, immutable"
+
+	reverse_proxy app:3000 {
+		# Compression happens once, here (zstd or gzip), not in the app as well.
+		header_up -Accept-Encoding
+		# While the app container restarts during an update, wait for it for up
+		# to 30 seconds instead of answering "502 Bad Gateway".
+		lb_try_duration 30s
+		lb_try_interval 500ms
+	}
+}

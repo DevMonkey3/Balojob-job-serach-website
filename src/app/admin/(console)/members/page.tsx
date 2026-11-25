@@ -1,9 +1,9 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { PencilIcon, PlusIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminLink } from "@/components/admin/admin-path";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { SelectField, TextField } from "@/components/admin/fields";
 import { Flash } from "@/components/admin/flash";
@@ -23,11 +23,11 @@ import { getOptionLabels } from "@/server/admin/options";
 export default function MembersPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader screenId="BHALO805" title="個人会員一覧" titleEn="Individual members">
-        <Link href="/admin/members/new" className={buttonVariants()}>
+      <PageHeader title="個人会員一覧" titleEn="Individual members">
+        <AdminLink href="/members/new" className={buttonVariants()}>
           <PlusIcon />
           新規個人会員の追加
-        </Link>
+        </AdminLink>
       </PageHeader>
       <Suspense fallback={<TableSkeleton />}>
         <MembersList searchParams={searchParams} />
@@ -59,7 +59,7 @@ async function MembersList({ searchParams }: { searchParams: Promise<SearchParam
     <>
       <Flash saved={param(sp, "saved")} />
 
-      <SearchForm clearHref="/admin/members">
+      <SearchForm clearHref="/members">
         <TextField name="name" label="氏名" defaultValue={filters.name} hint="氏名・フリガナの部分一致" />
         <SelectField name="gender" label="性別" options={genders} defaultValue={filters.gender} placeholder="すべて" />
         <SelectField name="nationality" label="国籍" options={countries} defaultValue={filters.nationality} placeholder="すべて" />
@@ -89,9 +89,9 @@ async function MembersList({ searchParams }: { searchParams: Promise<SearchParam
             {rows.map((m) => (
               <TableRow key={m.id}>
                 <TableCell className="font-mono text-xs">
-                  <Link href={`/admin/members/${m.id}`} className="text-primary hover:underline">
+                  <AdminLink href={`/members/${m.id}`} className="text-primary hover:underline">
                     {m.memberNo}
-                  </Link>
+                  </AdminLink>
                 </TableCell>
                 <TableCell>{m.fullName}</TableCell>
                 <TableCell>{m.gender}</TableCell>
@@ -110,10 +110,10 @@ async function MembersList({ searchParams }: { searchParams: Promise<SearchParam
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
-                    <Link href={`/admin/members/${m.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                    <AdminLink href={`/members/${m.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
                       <PencilIcon />
                       編集
-                    </Link>
+                    </AdminLink>
                     {canDelete && (
                       <DeleteButton action={deleteMemberAction} id={m.id} message="この個人会員情報を削除します。よろしいですか？" />
                     )}
@@ -125,7 +125,7 @@ async function MembersList({ searchParams }: { searchParams: Promise<SearchParam
         </Table>
       </div>
 
-      <Pagination pathname="/admin/members" searchParams={sp} page={page} pageCount={pageCount} total={total} pageSize={MEMBER_PAGE_SIZE} />
+      <Pagination pathname="/members" searchParams={sp} page={page} pageCount={pageCount} total={total} pageSize={MEMBER_PAGE_SIZE} />
     </>
   );
 }

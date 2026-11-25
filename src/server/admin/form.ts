@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { adminPath } from "@/server/admin/path";
 
 // Helpers for server actions that take a <form>: zod field types that accept
 // what browsers send (strings, "on" for checkboxes, "" for empty), and a
@@ -13,15 +14,25 @@ export type ActionState = {
 
 export const initialActionState: ActionState = {};
 
+// Characters nobody types on purpose and nobody can see: control codes
+// (tab and line breaks stay, textareas need them), zero-width spaces, and the
+// bidirectional overrides used to disguise text. The zero-width joiners
+// U+200C / U+200D stay: Bengali and other scripts use them.
+const INVISIBLE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u200B\u200E\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF]/g;
+
 const trim = (v: unknown) => {
   if (typeof v !== "string") return undefined;
-  const s = v.trim();
+  const s = v.replace(INVISIBLE, "").trim();
   return s === "" ? undefined : s;
 };
 
 /** Optional text. Empty → undefined. */
 export const str = (max = 300) =>
   z.preprocess(trim, z.string().max(max, `${max}文字以内で入力してください`).optional());
+
+/** A person's or organisation's name: required, and no < or > (never part of a real name, always part of an attack). */
+export const nameStr = (label: string, max = 80) =>
+  reqStr(label, max).pipe(z.string().regex(/^[^<>]*$/, `${label}に使用できない文字（< >）が含まれています`));
 
 /** Required text. */
 export const reqStr = (label: string, max = 300) =>
@@ -137,12 +148,14 @@ export const INVALID_INPUT = "入力内容を確認してください。";
 
 /**
  * Where a delete action should go afterwards: the `redirectTo` field that
- * DeleteButton adds on edit pages (so the user doesn't land on a 404), limited
- * to console paths. Undefined on list pages, which simply re-render.
+ * DeleteButton adds on edit pages (so the user doesn't land on a 404). The
+ * field holds a path inside the console ("/jobs", "/reviews?tab=jobs"); the
+ * result is that page's address, so it can only ever point into the console.
+ * Undefined on list pages, which simply re-render.
  */
 export function redirectTarget(formData: FormData): string | undefined {
   const to = formData.get("redirectTo");
-  return typeof to === "string" && /^\/admin(\/[\w-]+)*(\?[\w=&-]*)?$/.test(to) ? to : undefined;
+  return typeof to === "string" && /^(\/[\w-]+)+(\?[\w=&-]*)?$/.test(to) ? adminPath(to) : undefined;
 }
 
 // --- Conversions between form strings and Prisma values ----------------------

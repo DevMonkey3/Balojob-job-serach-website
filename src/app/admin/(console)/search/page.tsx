@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminLink } from "@/components/admin/admin-path";
 import { PageHeader } from "@/components/admin/page-header";
 import { param, type SearchParams } from "@/components/admin/pagination";
 import { ActiveBadge, EmptyRow, TableSkeleton } from "@/components/admin/status";
@@ -30,7 +30,6 @@ async function SearchResults({ searchParams }: { searchParams: Promise<SearchPar
   return (
     <>
       <PageHeader
-        screenId="BHALO800"
         title="クイック検索"
         description={q ? `「${q}」の検索結果：${total}件（各20件まで。会員番号・氏名・法人名・メールアドレス・職種の部分一致）` : "ヘッダーの検索欄に入力してください。"}
       />
@@ -55,9 +54,9 @@ async function SearchResults({ searchParams }: { searchParams: Promise<SearchPar
               {members.map((m) => (
                 <TableRow key={m.id}>
                   <TableCell className="font-mono text-xs">
-                    <Link href={`/admin/members/${m.id}`} className="text-primary hover:underline">
+                    <AdminLink href={`/members/${m.id}`} className="text-primary hover:underline">
                       {m.memberNo}
-                    </Link>
+                    </AdminLink>
                   </TableCell>
                   <TableCell>{m.fullName}</TableCell>
                   <TableCell>{m.nationality}</TableCell>
@@ -92,12 +91,12 @@ async function SearchResults({ searchParams }: { searchParams: Promise<SearchPar
               {corporations.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-mono text-xs">
-                    <Link
-                      href={`/admin/${c.kind === "school" ? "schools" : "companies"}/${c.id}`}
+                    <AdminLink
+                      href={`/${c.kind === "school" ? "schools" : "companies"}/${c.id}`}
                       className="text-primary hover:underline"
                     >
                       {c.memberNo}
-                    </Link>
+                    </AdminLink>
                   </TableCell>
                   <TableCell>{c.name}</TableCell>
                   <TableCell>
@@ -137,9 +136,9 @@ async function SearchResults({ searchParams }: { searchParams: Promise<SearchPar
                 <TableRow key={j.id}>
                   <TableCell className="font-mono text-xs">{j.corporation.memberNo}</TableCell>
                   <TableCell>
-                    <Link href={`/admin/jobs/${j.id}`} className="text-primary hover:underline">
+                    <AdminLink href={`/jobs/${j.id}`} className="text-primary hover:underline">
                       {j.corporation.name}
-                    </Link>
+                    </AdminLink>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{j.jobNo}</TableCell>
                   <TableCell>{jobTrackLabels[j.track]}</TableCell>

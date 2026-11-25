@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PencilIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { AdminLink } from "@/components/admin/admin-path";
 import { Flash } from "@/components/admin/flash";
 import { PageHeader } from "@/components/admin/page-header";
 import { param, type SearchParams } from "@/components/admin/pagination";
@@ -16,11 +16,12 @@ import { requireStaff } from "@/server/auth/staff";
 import { db } from "@/server/db";
 import { parseId } from "@/server/admin/form";
 import { getMember } from "@/server/admin/members";
+import { adminPath } from "@/server/admin/path";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<SearchParams> };
 
 // 候補者プロフィール審査: the read-only 履歴書 of one candidate with
-// [承認] / [差戻し]. Editing stays on BHALO806 (/admin/members/[id]).
+// [承認] / [差戻し]. Editing stays on BHALO806 (the console's /members/[id]).
 export default function CandidateReviewPage({ params, searchParams }: Props) {
   return (
     <div className="flex flex-col gap-6">
@@ -31,7 +32,9 @@ export default function CandidateReviewPage({ params, searchParams }: Props) {
   );
 }
 
-const fileUrl = (id: string | null) => (id ? `/admin/files/${id}` : null);
+// CandidateProfileView is shared with the employer pages and takes ready-made
+// addresses, so the console ones are built here (only called after requireStaff()).
+const fileUrl = (id: string | null) => (id ? adminPath(`/files/${id}`) : null);
 
 async function CandidateReview({ params, searchParams }: Props) {
   await requireStaff("edit");
@@ -40,7 +43,7 @@ async function CandidateReview({ params, searchParams }: Props) {
   if (!id) notFound();
 
   // getMember has the profile; the review state and the uploaded files are
-  // read alongside it (staff open files through /admin/files/<id>).
+  // read alongside it (staff open files through the console's /files/<id>).
   const [member, review] = await Promise.all([
     getMember(id),
     db.individual.findUnique({
@@ -69,16 +72,15 @@ async function CandidateReview({ params, searchParams }: Props) {
   return (
     <>
       <PageHeader
-        screenId="MVP"
         title="候補者プロフィール審査"
         titleEn="Candidate review"
         description={[`${member.fullName} / 会員番号 ${member.memberNo}`, ...timeline].join(" ・ ")}
       >
         <ReviewBadge kind="candidate" status={status} reason={review.rejectionReason} />
-        <Link href={`/admin/members/${member.id}`} className={buttonVariants({ variant: "outline" })}>
+        <AdminLink href={`/members/${member.id}`} className={buttonVariants({ variant: "outline" })}>
           <PencilIcon />
           編集
-        </Link>
+        </AdminLink>
       </PageHeader>
       <Flash saved={param(sp, "saved")} />
       <CandidateProfileView
@@ -89,7 +91,7 @@ async function CandidateReview({ params, searchParams }: Props) {
           resumeName: review.resumeFile?.originalName ?? null,
         }}
         showContact
-        backHref={queueHref("candidates")}
+        backHref={adminPath(queueHref("candidates"))}
         backLabel="審査待ち一覧へ"
         actions={
           pending ? (

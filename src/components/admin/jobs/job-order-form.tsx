@@ -10,7 +10,7 @@ export function JobOrderForm({ jobId, order }: { jobId: string; order: JobOrderD
   return (
     <FormShell action={saveJobOrderAction} submitLabel="求人票を保存">
       <HiddenField name="jobId" value={jobId} />
-      <FieldGroup title="求人票" screenId="BHALO117" description="労働条件と保険・手当。未作成の場合は保存時に作成されます。">
+      <FieldGroup title="求人票" description="労働条件と保険・手当。未作成の場合は保存時に作成されます。">
         <TextField name="dailyWorkingTime" label="1日の労働時間" type="time" defaultValue={order?.dailyWorkingTime} />
         <TextField name="breakTime" label="休憩時間" defaultValue={order?.breakTime} maxLength={120} />
         <TextField name="overtimeDailyHours" label="1日の残業時間" type="number" suffix="時間" defaultValue={order?.overtimeDailyHours} min={0} max={24} />

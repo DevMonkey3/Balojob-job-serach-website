@@ -9,7 +9,7 @@ import { requireStaff } from "@/server/auth/staff";
 export default function NewUserPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader screenId="BHALO811" title="新規ユーザの追加" titleEn="New staff user" />
+      <PageHeader title="新規ユーザの追加" titleEn="New staff user" />
       <Suspense fallback={<TableSkeleton />}>
         <NewUserForm />
       </Suspense>

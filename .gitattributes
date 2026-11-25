@@ -1,0 +1,8 @@
+# Files that run on the Linux server keep LF line endings, also when the
+# repository is checked out on Windows. A shell script saved with CRLF fails
+# with "bad interpreter" or "$'\r': command not found".
+*.sh text eol=lf
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+docker-compose.yml text eol=lf
+deploy/aws/** text eol=lf

@@ -490,6 +490,8 @@ model Corporation {
   // ロゴ / 紹介文 (BHALO113–114 / 153–154)
   logoKey      String? @map("logo_key") @db.VarChar(300)
   introduction String?
+  /// 許可・登録番号. The only company detail besides the name that candidates see.
+  licenseNo    String? @map("license_no") @db.VarChar(100)
 
   // 対象選択 (BHALO110). At least one must be true (CHECK constraint).
   isCompany              Boolean @default(false) @map("is_company")

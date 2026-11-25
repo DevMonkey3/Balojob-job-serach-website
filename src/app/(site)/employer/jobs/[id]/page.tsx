@@ -55,7 +55,7 @@ async function EditJob({ params, searchParams }: Props) {
 
   return (
     <>
-      <PageHeader screenId="BHALO116" title="求人の編集" titleEn="Edit job posting" description={meta.join(" ・ ")}>
+      <PageHeader title="求人の編集" titleEn="Edit job posting" description={meta.join(" ・ ")}>
         <ReviewBadge kind="job" status={job.reviewStatus} isActive={job.isActive} reason={job.rejectionReason} />
       </PageHeader>
       <Flash saved={param(sp, "saved")} />
