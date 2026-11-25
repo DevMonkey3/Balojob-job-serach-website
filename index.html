@@ -148,13 +148,13 @@ a.tile:hover{background:var(--muted)}
 var KEY = "bhalojob-demo-v1";
 var DEMO_PASSWORD = "demo1234";
 
-var TRACK = { engineer: "技人国", ssw: "特定技能", titp: "技能実習" };
-var TRACK_EN = { engineer: "Engineer / Specialist", ssw: "Specified Skilled Worker", titp: "Technical Intern Training" };
+var TRACK = { engineer: "技人国", ssw: "特定技能", titp: "育成就労" };
+var TRACK_EN = { engineer: "Engineer / Specialist", ssw: "Specified Skilled Worker", titp: "Employment for Skill Development (ESD)" };
 var GOALS = {
-  engineer: "技人国での求職希望", ssw: "特定技能での求職希望", titp: "技能実習での求職希望",
+  engineer: "技人国での求職希望", ssw: "特定技能での求職希望", titp: "育成就労での求職希望",
   university: "大学・大学院への留学希望", vocational: "専門学校への留学希望", languageSchool: "日本語学校への留学希望"
 };
-var GOAL_SHORT = { engineer: "技人国", ssw: "特定技能", titp: "技能実習", university: "大学", vocational: "専門学校", languageSchool: "日本語学校" };
+var GOAL_SHORT = { engineer: "技人国", ssw: "特定技能", titp: "育成就労", university: "大学", vocational: "専門学校", languageSchool: "日本語学校" };
 var OPT = {
   industry: ["介護", "建設", "農業", "IT", "自動車整備", "外食", "製造", "宿泊", "水産加工", "食肉加工"],
   country: ["バングラデシュ", "日本", "ベトナム", "ネパール", "ミャンマー", "フィリピン", "インドネシア", "スリランカ", "インド"],
@@ -388,7 +388,7 @@ function registerChoice() {
 function viewHome() {
   var jobCount = function (t) { return S.jobs.filter(function (j) { return listed(j) && j.track === t; }).length; };
   var recCount = function (c) { return S.recruitments.filter(function (r) { return byId(S.schools, r.sid).category === c; }).length; };
-  var tracks = [["engineer", "エンジニア、通訳、事務など専門職での就職。"], ["ssw", "介護・建設・外食などの分野で、即戦力として働く。"], ["titp", "日本の現場で技能を学びながら働く制度。"]];
+  var tracks = [["engineer", "エンジニア、通訳、事務など専門職での就職。"], ["ssw", "介護・建設・外食などの分野で、即戦力として働く。"], ["titp", "日本の現場で働きながら、技能と日本語を身につける制度。"]];
   var schools = [["大学・大学院", "University / Graduate school"], ["専門学校", "Vocational school"], ["日本語学校", "Japanese language school"]];
   var how = [["無料会員登録", "ログイン情報を登録して、プロフィールを作成します。"], ["求人・学校を探す", "希望に合った求人や学校がマイページに表示されます。"], ["コンタクト申込", "気になる企業・学校を選んで申し込むと、担当者がおつなぎします。"]];
   return siteLayout(
