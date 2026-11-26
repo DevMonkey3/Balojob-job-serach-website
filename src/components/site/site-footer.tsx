@@ -40,22 +40,22 @@ const columns = [
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto border-t bg-neutral-900 text-neutral-300">
+    // A light, warm footer in the brand's own tones (the cream behind the orange),
+    // so the page ends softly instead of on a black block.
+    <footer className="mt-auto border-t border-primary/15 bg-secondary text-foreground/80">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 lg:grid-cols-[1.3fr_3fr]">
         <div className="flex flex-col gap-4">
-          <div className="w-fit rounded-xl bg-white px-3 py-2">
-            <Logo />
-          </div>
-          <p className="max-w-xs text-sm leading-relaxed text-neutral-400">
+          <Logo />
+          <p className="max-w-xs text-sm leading-relaxed text-foreground/70">
             世界中の優秀な人材と、日本の企業・学校をつなぐマッチングサイトです。
           </p>
         </div>
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           {columns.map((col) => (
             <nav key={col.title} aria-label={col.title} className="flex flex-col gap-2.5 text-sm">
-              <span className="font-semibold text-white">{col.title}</span>
+              <span className="font-bold text-secondary-foreground">{col.title}</span>
               {col.links.map((l) => (
-                <Link key={l.href} href={l.href} className="text-neutral-400 transition-colors hover:text-white">
+                <Link key={l.href} href={l.href} className="text-foreground/70 transition-colors hover:text-primary hover:underline">
                   {l.label}
                 </Link>
               ))}
@@ -63,8 +63,8 @@ export function SiteFooter() {
           ))}
         </div>
       </div>
-      <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-5 text-xs text-neutral-400 sm:flex-row sm:items-center sm:justify-between">
+      <div className="border-t border-primary/15 bg-background/60">
+        <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-5 text-xs text-foreground/60 sm:flex-row sm:items-center sm:justify-between">
           <p>運営：ジャパンバングラブリッジ株式会社（Japan Bangla Bridge Co., Ltd.）</p>
           <p>© Bhalojob</p>
         </div>
