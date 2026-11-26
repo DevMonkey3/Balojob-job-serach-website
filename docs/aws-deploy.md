@@ -640,3 +640,24 @@ sudo docker compose restart app2          # restart one copy; the other keeps se
 ```
 
 This protects one server from falling over; it does not turn one server into several. For 99.99% uptime or thousands of visitors at the same moment, see "Growing later".
+
+## 18. The page cache
+
+A fourth container, `cache` (nginx, `deploy/aws/cache/nginx.conf`), sits between Caddy and the app for visitors who are **not signed in**.
+
+- Building one page costs the app about 25 ms of processor time, which limited the server to about 40 pages a second. A visitor who is not signed in gets the same page as every other such visitor, so the page is built once, kept for 10 seconds, and handed to everyone else who asks in that time.
+- **Signed-in members, staff, and every form submission never go through the cache.** Caddy sends them straight to the app (the `@signed_in` and `@writes` rules in the Caddyfile). The cache also refuses to store anything requested with a login cookie, anything that sets a cookie, and any staff-console page.
+- Pages are stored already compressed, so handing one out costs almost nothing.
+- Build files under `/_next/static/` are kept for 30 days (their names change whenever their content does).
+- **What staff will notice:** after approving a job, visitors who are not signed in see it within about 10 to 20 seconds, not instantly. Signed-in users see it at once.
+- If the app is overloaded or restarting, the cache keeps handing out the last copy of a page (up to 10 minutes old) instead of an error.
+- `update.sh` and `restore.sh` empty the page cache, because its pages belong to the old version or the old data.
+
+Measured on the t3.small with the test tool running on the same server (so real figures are somewhat better): about 365 pages a second for visitors who are not signed in, against about 40 before. Pages for signed-in users are unchanged at about 35 to 40 a second; more of those needs more processor cores.
+
+Useful commands:
+
+```bash
+sudo docker compose logs -f cache                         # the cache's log (errors only)
+sudo docker compose exec cache sh -c 'rm -rf /var/cache/nginx/pages/*; nginx -s reload'   # empty the page cache now
+```

@@ -155,6 +155,9 @@ main() {
   dc up -d --remove-orphans
   info "The new version is up and reaches the database."
 
+  # Pages stored by the cache belong to the old version: throw them away.
+  purge_page_cache
+
   # Picks up edits to deploy/aws/caddy/Caddyfile without dropping connections.
   if [ -n "$(service_container caddy)" ]; then
     dc exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1 ||

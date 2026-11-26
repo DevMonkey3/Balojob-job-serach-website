@@ -137,6 +137,15 @@ show_app_trouble() {
   dc logs --no-log-prefix --tail 20 migrate || true
 }
 
+# Throws away the stored pages (not the build files) and makes the cache read
+# its settings again. Run after anything that changes what pages look like: a
+# new version of the site, a restored database.
+purge_page_cache() {
+  [ -n "$(service_container cache)" ] || return 0
+  dc exec -T cache sh -c 'rm -rf /var/cache/nginx/pages/* 2>/dev/null; nginx -s reload' >/dev/null 2>&1 ||
+    dc restart cache >/dev/null 2>&1 || true
+}
+
 backup_dir() {
   local dir
   dir="$(env_get BACKUP_DIR)"

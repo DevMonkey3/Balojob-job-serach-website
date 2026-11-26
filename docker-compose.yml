@@ -144,12 +144,41 @@ services:
       <<: *app-env
       PEER_ORIGINS: http://app:3000
 
+  # Page cache for visitors who are not signed in (deploy/aws/cache/nginx.conf).
+  # A page is built once by the app and then handed to everyone who asks for it
+  # in the next 10 seconds. Signed-in members and staff never go through it.
+  cache:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    volumes:
+      - ./deploy/aws/cache/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/aws/cache/proxy_common.conf:/etc/nginx/proxy_common.conf:ro
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/__cache_health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+      start_interval: 2s
+    ulimits:
+      nofile:
+        soft: 16384
+        hard: 16384
+    mem_limit: 128m
+    logging: *logging
+
   caddy:
     image: caddy:2
     restart: unless-stopped
     depends_on:
       - app
       - app2
+      - cache
+    # 8081 is the inner door the cache fetches pages through. Not published.
+    expose:
+      - "8081"
     ports:
       - "80:80"
       - "443:443"

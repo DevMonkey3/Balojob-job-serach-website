@@ -215,6 +215,7 @@ main() {
     show_app_trouble
     die "The data was restored, but the app did not become healthy within 5 minutes. See the lines above."
   fi
+  purge_page_cache
   STAGE="done"
 
   log "Restore finished. The site is running on the restored data."

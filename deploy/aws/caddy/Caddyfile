@@ -5,6 +5,15 @@
 # For that to work the domain's A record must point at this server and ports
 # 80 and 443 must be open.
 #
+# How a request travels:
+#
+#   signed-in member or staff, or any form submission
+#       visitor -> Caddy -> app / app2                          (always built fresh)
+#   everyone else (a plain page view without a login cookie)
+#       visitor -> Caddy -> cache (nginx) -> Caddy :8081 -> app / app2
+#       The cache keeps each page 10 seconds, so a thousand visitors reading
+#       the same page cost the app one page build, not a thousand.
+#
 # The app runs as two copies (app and app2). Caddy shares requests between
 # them, stops sending to a copy that is down or restarting, and never lets
 # more requests into a copy than it can serve (see "Overload" below).
@@ -26,9 +35,10 @@
 	}
 }
 
-# What both proxy blocks below have in common.
+# What every proxy block to the app has in common.
 (app_upstreams) {
-	# Compression happens once, here (zstd or gzip), not in the app as well.
+	# The app never compresses: Caddy does it (front door for signed-in visitors,
+	# inner door for pages on their way into the cache).
 	header_up -Accept-Encoding
 
 	# Every 5 seconds each copy is asked /api/health. Two bad answers and it
@@ -49,68 +59,26 @@
 	}
 }
 
-{$DOMAIN} {
-	encode zstd gzip
-
-	# Uploads are 10 MB at most and the app accepts 11 MB per request
-	# (serverActions.bodySizeLimit in next.config.ts). Anything bigger stops here.
-	request_body {
-		max_size 12MB
+# Pages and actions, to whichever copy is less busy.
+#
+# Overload: one copy builds pages on one processor core. Past about 30 pages
+# at once it only gets slower for everybody and its memory fills up, which is
+# how an unprotected server falls over. So a copy with 30 requests in progress
+# takes no more. A new request goes to the other copy, or waits up to 8 seconds
+# for a free place, and only then gets the short "busy" page. The count is
+# shared by every block that imports this, so it is 30 per copy in total.
+(app_pool) {
+	reverse_proxy app:3000 app2:3000 {
+		import app_upstreams
+		lb_policy least_conn
+		unhealthy_request_count 30
+		lb_try_duration 8s
+		lb_try_interval 250ms
 	}
+}
 
-	header {
-		# One year of HTTPS-only for this host. Subdomains are left alone on purpose.
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		X-Frame-Options "SAMEORIGIN"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
-		# "?" = only when the app did not send its own policy.
-		?Content-Security-Policy "frame-ancestors 'self'"
-		-Server
-		-X-Powered-By
-	}
-
-	# The two copies talk to each other on /api/internal/ inside the Docker
-	# network. From the internet that address does not exist.
-	@internal path /api/internal/*
-	handle @internal {
-		respond "Not found" 404
-	}
-
-	# Build files have a hash in their name and never change. Next.js already
-	# sends this header for them; this only fills it in if it is ever missing.
-	# They are cheap to serve, so they are never held back by the limit below.
-	@static path /_next/static/*
-	handle @static {
-		header ?Cache-Control "public, max-age=31536000, immutable"
-		reverse_proxy app:3000 app2:3000 {
-			import app_upstreams
-			lb_policy round_robin
-			lb_try_duration 10s
-			lb_try_interval 250ms
-		}
-	}
-
-	# Pages and actions.
-	#
-	# Overload: one copy renders pages on one processor core. Past about 30
-	# pages at once it only gets slower for everybody and its memory fills up,
-	# which is how an unprotected server falls over. So a copy with 30 requests
-	# in progress takes no more. A new request goes to the other copy, or waits
-	# up to 8 seconds for a free place, and only then gets the short "busy"
-	# page below. The site slows down under a flood; it does not go down.
-	handle {
-		reverse_proxy app:3000 app2:3000 {
-			import app_upstreams
-			lb_policy least_conn
-			unhealthy_request_count 30
-			lb_try_duration 8s
-			lb_try_interval 250ms
-		}
-	}
-
-	# No copy could take the request (both full, or both restarting).
+# Nothing could take the request (both copies full, or everything restarting).
+(busy_page) {
 	handle_errors {
 		@busy expression `{err.status_code} in [502, 503, 504]`
 		handle @busy {
@@ -144,4 +112,123 @@
 				HTML {err.status_code}
 		}
 	}
+}
+
+# ---------------------------------------------------------------------------
+# The front door: HTTPS for visitors.
+# ---------------------------------------------------------------------------
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Uploads are 10 MB at most and the app accepts 11 MB per request
+	# (serverActions.bodySizeLimit in next.config.ts). Anything bigger stops here.
+	request_body {
+		max_size 12MB
+	}
+
+	header {
+		# One year of HTTPS-only for this host. Subdomains are left alone on purpose.
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		# "?" = only when the app did not send its own policy.
+		?Content-Security-Policy "frame-ancestors 'self'"
+		-Server
+		-X-Powered-By
+		# Internal: which answers came out of the page cache.
+		-X-Cache
+	}
+
+	# The two copies talk to each other on /api/internal/ inside the Docker
+	# network. From the internet that address does not exist.
+	@internal path /api/internal/*
+	handle @internal {
+		respond "Not found" 404
+	}
+
+	# Build files have a hash in their name and never change: always from the
+	# cache, whoever asks. Next.js already sends this header for them; this only
+	# fills it in if it is ever missing.
+	@static {
+		method GET HEAD
+		path /_next/static/*
+	}
+	handle @static {
+		header ?Cache-Control "public, max-age=31536000, immutable"
+		reverse_proxy cache:8080 {
+			lb_try_duration 5s
+			lb_try_interval 250ms
+		}
+	}
+
+	# Form submissions, uploads, logins: never cached, straight to the app.
+	@writes not method GET HEAD
+	handle @writes {
+		import app_pool
+	}
+
+	# Signed-in members and staff: their pages are personal, so they are always
+	# built fresh and streamed straight from the app.
+	@signed_in header_regexp Cookie (^|;\s*)bj_(member|admin)=
+	handle @signed_in {
+		import app_pool
+	}
+
+	# Everyone else: a plain page view without a login cookie, through the cache.
+	handle {
+		reverse_proxy cache:8080 {
+			lb_try_duration 5s
+			lb_try_interval 250ms
+			transport http {
+				dial_timeout 3s
+				response_header_timeout 60s
+			}
+		}
+	}
+
+	import busy_page
+}
+
+# ---------------------------------------------------------------------------
+# The inner door: where the cache fetches a page it does not have yet.
+# Port 8081 exists only inside the Docker network; it is not published.
+# ---------------------------------------------------------------------------
+http://:8081 {
+	# Compressed once here, then stored by the cache in that form. The front
+	# door sees it is already compressed and passes it on untouched.
+	encode gzip
+
+	# These requests arrive from the cache container, so Caddy would report the
+	# cache as "the visitor". Pass on what the front door wrote instead, so the
+	# app still sees the real visitor's address, host name and https.
+	@static path /_next/static/*
+	handle @static {
+		reverse_proxy app:3000 app2:3000 {
+			import app_upstreams
+			lb_policy round_robin
+			lb_try_duration 10s
+			lb_try_interval 250ms
+			header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
+			header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+			header_up X-Forwarded-Host {http.request.header.X-Forwarded-Host}
+		}
+	}
+
+	# Same limit as app_pool above (the count per copy is shared).
+	handle {
+		reverse_proxy app:3000 app2:3000 {
+			import app_upstreams
+			lb_policy least_conn
+			unhealthy_request_count 30
+			lb_try_duration 8s
+			lb_try_interval 250ms
+			header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
+			header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+			header_up X-Forwarded-Host {http.request.header.X-Forwarded-Host}
+		}
+	}
+
+	import busy_page
 }
