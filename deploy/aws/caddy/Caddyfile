@@ -11,8 +11,9 @@
 #       visitor -> Caddy -> app / app2                          (always built fresh)
 #   everyone else (a plain page view without a login cookie)
 #       visitor -> Caddy -> cache (nginx) -> Caddy :8081 -> app / app2
-#       The cache keeps each page 10 seconds, so a thousand visitors reading
-#       the same page cost the app one page build, not a thousand.
+#       The cache keeps each page until something public changes (one minute
+#       at most), so a thousand visitors reading the same page cost the app
+#       one page build, not a thousand.
 #
 # The app runs as two copies (app and app2). Caddy shares requests between
 # them, stops sending to a copy that is down or restarting, and never lets

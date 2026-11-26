@@ -142,7 +142,7 @@ show_app_trouble() {
 # new version of the site, a restored database.
 purge_page_cache() {
   [ -n "$(service_container cache)" ] || return 0
-  dc exec -T cache sh -c 'rm -rf /var/cache/nginx/pages/* 2>/dev/null; nginx -s reload' >/dev/null 2>&1 ||
+  dc exec -T cache sh -c 'nginx -s reload && sleep 1 && wget -q -O /dev/null --post-data= http://127.0.0.1:8082/purge' >/dev/null 2>&1 ||
     dc restart cache >/dev/null 2>&1 || true
 }
 

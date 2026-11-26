@@ -65,6 +65,8 @@ x-app-env: &app-env
   TZ: Asia/Tokyo
   # Heap ceiling per copy, below the container's memory limit.
   NODE_OPTIONS: --max-old-space-size=400
+  # Where the app tells the page cache to forget its pages (src/server/cache-tags.ts).
+  PAGE_CACHE_PURGE_URL: http://cache:8082/purge
 
 services:
   db:
@@ -145,16 +147,20 @@ services:
       PEER_ORIGINS: http://app:3000
 
   # Page cache for visitors who are not signed in (deploy/aws/cache/nginx.conf).
-  # A page is built once by the app and then handed to everyone who asks for it
-  # in the next 10 seconds. Signed-in members and staff never go through it.
+  # A page is built once by the app and then handed to everyone else who asks,
+  # until something public changes or a minute has passed. Signed-in members
+  # and staff never go through it.
   cache:
     image: nginx:stable-alpine
     restart: unless-stopped
     volumes:
       - ./deploy/aws/cache/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./deploy/aws/cache/proxy_common.conf:/etc/nginx/proxy_common.conf:ro
+      - ./deploy/aws/cache/cachectl.js:/etc/nginx/cachectl.js:ro
     expose:
       - "8080"
+      # The app empties the page cache through this one. Caddy never uses it.
+      - "8082"
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/__cache_health"]
       interval: 30s

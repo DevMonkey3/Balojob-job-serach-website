@@ -10,7 +10,9 @@ import { after } from "next/server";
 //
 // refreshTag() is used wherever the code used to call updateTag(): it refreshes
 // this copy at once, then (after the response is sent) asks every other copy to
-// drop the same tag through POST /api/internal/refresh-tag.
+// drop the same tag through POST /api/internal/refresh-tag, and finally tells
+// the page cache in front of the app (deploy/aws/cache) to forget its stored
+// pages. So a visitor who is not signed in sees the change on the next visit.
 
 /** Every tag the app uses. The internal endpoint accepts nothing else. */
 export const CACHE_TAGS = ["listings", "options", "popular-industries"] as const;
@@ -47,21 +49,39 @@ export function isInternalToken(value: string | null): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+/**
+ * Tell the page cache to forget every stored page. PAGE_CACHE_PURGE_URL is set
+ * in docker-compose.yml; without it (local development) there is no page cache.
+ */
+async function purgePageCache(): Promise<void> {
+  const url = process.env.PAGE_CACHE_PURGE_URL;
+  if (!url) return;
+  try {
+    const response = await fetch(url, { method: "POST", signal: AbortSignal.timeout(3000), cache: "no-store" });
+    if (!response.ok) console.warn(`[cache] the page cache answered ${response.status} to a purge`);
+  } catch (error) {
+    // Its pages expire by themselves within a minute, so this is logged, not retried.
+    console.warn("[cache] could not empty the page cache:", error instanceof Error ? error.message : error);
+  }
+}
+
 /** Drop the cached data under `tag`, here now and on the other copies a moment later. */
 export function refreshTag(tag: CacheTag): void {
   updateTag(tag);
 
   const origins = peerOrigins();
   const token = internalToken();
-  if (origins.length === 0 || !token) return;
 
-  // After the response: the person who clicked never waits for the other copy.
+  // After the response: the person who clicked never waits for any of this.
   after(async () => {
+    // The other copies first, so that whichever copy builds the next page for
+    // the page cache already has the new data.
+    const headers: Record<string, string> = { "content-type": "application/json", [INTERNAL_HEADER]: token ?? "" };
     await Promise.all(
-      origins.map((origin) =>
+      (token ? origins : []).map((origin) =>
         fetch(`${origin}${REFRESH_PATH}`, {
           method: "POST",
-          headers: { "content-type": "application/json", [INTERNAL_HEADER]: token },
+          headers,
           body: JSON.stringify({ tag }),
           signal: AbortSignal.timeout(3000),
           cache: "no-store",
@@ -72,5 +92,6 @@ export function refreshTag(tag: CacheTag): void {
         }),
       ),
     );
+    await purgePageCache();
   });
 }
