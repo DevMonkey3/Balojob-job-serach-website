@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { refreshTag } from "@/server/cache-tags";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireEmployer } from "@/server/auth/member";
@@ -55,7 +56,7 @@ export async function saveMyCompanyAction(_prev: ActionState, formData: FormData
   if (!current) return { message: "対象データがありません。" };
   await updateMyCompany(current, parsed.data);
 
-  updateTag("listings");
+  refreshTag("listings");
   redirect("/employer?saved=1");
 }
 
@@ -97,7 +98,7 @@ export async function saveMyJobAction(_prev: ActionState, formData: FormData): P
     jobId = await createMyJob(corporationId, input);
   }
 
-  updateTag("listings");
+  refreshTag("listings");
   revalidatePath("/admin/reviews");
   redirect(`/employer/jobs/${jobId}?saved=${id ? "resubmitted" : "submitted"}`);
 }
@@ -108,6 +109,6 @@ export async function setMyJobActiveAction(formData: FormData) {
   const jobId = parseId(String(formData.get("id") ?? ""));
   if (!jobId) return;
   await setMyJobActive(BigInt(member.corporationId), jobId, formData.get("active") === "1");
-  updateTag("listings");
+  refreshTag("listings");
   revalidatePath("/employer/jobs");
 }

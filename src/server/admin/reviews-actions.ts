@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { refreshTag } from "@/server/cache-tags";
 import { redirect } from "next/navigation";
 import { requireStaffForAction } from "@/server/auth/staff";
 import { audit } from "@/server/admin/audit";
@@ -39,7 +40,7 @@ async function decide(formData: FormData, status: "approved" | "rejected") {
   if (!changed) return;
 
   await audit(staff.id, status === "approved" ? "approve" : "reject", reviewTargetTable[parsed.target], parsed.id, reason ? { reason } : undefined);
-  if (parsed.target === "job") updateTag("listings");
+  if (parsed.target === "job") refreshTag("listings");
   revalidatePath("/admin/reviews");
   revalidatePath(listRoute[parsed.target]);
   revalidatePath("/mypage");

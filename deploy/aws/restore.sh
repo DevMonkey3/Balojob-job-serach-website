@@ -188,7 +188,8 @@ main() {
   STAGE="restoring"
 
   log "Stopping the app"
-  dc stop app
+  # shellcheck disable=SC2086
+  dc stop $APP_SERVICES
 
   log "Restoring the database"
   dc exec -T db dropdb -U "$user" --if-exists --force "$database"

@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { refreshTag } from "@/server/cache-tags";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireStaffForAction } from "@/server/auth/staff";
@@ -69,7 +70,7 @@ export async function saveRecruitmentAction(_prev: ActionState, formData: FormDa
     await audit(staff.id, "create", "recruitments", recruitmentId);
   }
 
-  updateTag("listings");
+  refreshTag("listings");
   redirect(adminPath(`/recruitments/${recruitmentId}?saved=${id ? "1" : "created"}`));
 }
 
@@ -80,7 +81,7 @@ export async function deleteRecruitmentAction(formData: FormData) {
   if (!id) return;
   await deleteRecruitment(id);
   await audit(staff.id, "delete", "recruitments", id);
-  updateTag("listings");
+  refreshTag("listings");
   // revalidatePath takes the route file path, which stays /admin/... whatever ADMIN_PATH is.
   revalidatePath("/admin/recruitments");
   const to = redirectTarget(formData);

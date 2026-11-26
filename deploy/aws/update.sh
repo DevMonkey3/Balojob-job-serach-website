@@ -23,7 +23,8 @@ Usage: sudo bash deploy/aws/update.sh [options]
   2. Dumps the database as a backup.
   3. Builds the new version while the current one keeps running.
   4. Applies new database migrations.
-  5. Swaps the app container, waits until it is healthy, reloads Caddy.
+  5. Replaces the two app containers one after the other (the other one keeps
+     serving, so visitors notice nothing), then reloads Caddy.
   6. Deletes old images.
 
 Options:
@@ -137,16 +138,21 @@ main() {
   dc run --rm migrate ||
     die "The migration failed. The site is still running the previous version. Read the lines above; the dump made before this update is the newest db-*.dump in $(backup_dir)."
 
-  log "Switching to the new version"
+  log "Switching to the new version, one copy at a time"
+  local service
+  for service in $APP_SERVICES; do
+    dc up -d --no-deps "$service"
+    if ! wait_for_service "$service" 300; then
+      show_app_trouble
+      printf '\nTo go back to the version that was running before this update:\n' >&2
+      printf '  sudo docker tag %s:previous %s:latest\n' "$APP_IMAGE" "$APP_IMAGE" >&2
+      printf '  cd "%s" && sudo docker compose up -d --no-build %s\n' "$ROOT_DIR" "$APP_SERVICES" >&2
+      die "The new version ($service) did not become healthy within 5 minutes. The other copy was not touched."
+    fi
+    info "$service is running the new version."
+  done
+  # Everything else (the proxy, anything new in docker-compose.yml).
   dc up -d --remove-orphans
-
-  if ! wait_for_app 300; then
-    show_app_trouble
-    printf '\nTo go back to the version that was running before this update:\n' >&2
-    printf '  sudo docker tag %s:previous %s:latest\n' "$APP_IMAGE" "$APP_IMAGE" >&2
-    printf '  cd "%s" && sudo docker compose up -d --no-build app\n' "$ROOT_DIR" >&2
-    die "The new version did not become healthy within 5 minutes."
-  fi
   info "The new version is up and reaches the database."
 
   # Picks up edits to deploy/aws/caddy/Caddyfile without dropping connections.

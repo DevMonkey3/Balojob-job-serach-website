@@ -619,3 +619,24 @@ One server is enough to start. None of the following is built now. Each can be a
 | `src/app/api/health/route.ts` | `/api/health`: answers 200 only when the database answers. |
 
 Operated by ジャパンバングラブリッジ株式会社 (Japan Bangla Bridge Co., Ltd.).
+
+## 17. Two copies of the app, and what happens under a flood
+
+The website runs as two identical containers, `app` and `app2`. Node.js uses one processor core per copy, so two copies use both cores of the server.
+
+- **Updates without downtime.** `update.sh` replaces the copies one after the other. Caddy sends visitors to the copy that is up.
+- **A copy that stops answering gets no visitors.** Caddy asks each copy `/api/health` every 5 seconds.
+- **Overload protection.** A copy with 30 requests in progress takes no more. New requests go to the other copy or wait up to 8 seconds, and only then get a short "busy" page that reloads by itself. Under a flood the site slows down; it does not go down.
+- **Connection limit.** Caddy accepts about 8,000 connections at once. More than that wait in the operating system's queue instead of using up memory.
+- **Cached lists stay in step.** When staff approve a job, the copy that handled it tells the other one (`src/server/cache-tags.ts`, `PEER_ORIGINS` in `docker-compose.yml`). If that message is lost, the other copy catches up by itself within a few minutes.
+- **Login lockout is counted per copy**, so the limit of 10 wrong passwords can be up to 20 in the worst case.
+
+Useful commands:
+
+```bash
+sudo docker compose ps                    # both copies should say "healthy"
+sudo docker compose logs -f app app2      # the site's log, both copies
+sudo docker compose restart app2          # restart one copy; the other keeps serving
+```
+
+This protects one server from falling over; it does not turn one server into several. For 99.99% uptime or thousands of visitors at the same moment, see "Growing later".

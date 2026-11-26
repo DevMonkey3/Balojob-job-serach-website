@@ -6,10 +6,10 @@
 # also work from this folder:
 #
 #   sudo docker compose ps
-#   sudo docker compose logs -f app
+#   sudo docker compose logs -f app app2
 #
 # Only Caddy is reachable from outside (ports 80 and 443). The database and
-# the app listen on the private Docker network only.
+# the two copies of the app listen on the private Docker network only.
 
 name: bhalojob
 
@@ -19,6 +19,52 @@ x-logging: &logging
   options:
     max-size: "10m"
     max-file: "5"
+
+# Everything the two copies of the app have in common.
+x-app: &app
+  image: bhalojob-app:latest
+  restart: unless-stopped
+  init: true
+  depends_on:
+    db:
+      condition: service_healthy
+    migrate:
+      condition: service_completed_successfully
+  volumes:
+    - uploads:/data/storage
+  expose:
+    - "3000"
+  healthcheck:
+    test:
+      - CMD
+      - node
+      - -e
+      - "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 60s
+    start_interval: 3s
+  # Caddy never lets more than a few dozen requests into one copy at a time
+  # (deploy/aws/caddy/Caddyfile), so a copy stays far below this.
+  mem_limit: 640m
+  stop_grace_period: 30s
+  logging: *logging
+
+x-app-env: &app-env
+  NODE_ENV: production
+  PORT: "3000"
+  HOSTNAME: 0.0.0.0
+  DATABASE_URL: ${DATABASE_URL:?missing in the env file}
+  APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:?missing in the env file}
+  ADMIN_PATH: ${ADMIN_PATH:?missing in the env file}
+  # Per copy: two copies use at most 10 of PostgreSQL's 30 connections.
+  DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-5}
+  STORAGE_DIR: /data/storage
+  # Same clock as the PCs the site was developed on. Dates in the database stay UTC.
+  TZ: Asia/Tokyo
+  # Heap ceiling per copy, below the container's memory limit.
+  NODE_OPTIONS: --max-old-space-size=400
 
 services:
   db:
@@ -73,68 +119,57 @@ services:
       DATABASE_URL: ${DATABASE_URL:?missing in the env file}
     logging: *logging
 
+  # The website runs as two identical copies, "app" and "app2". Node.js uses one
+  # processor core per copy, so two copies use both cores of the server, and an
+  # update can replace them one at a time while the other keeps serving.
+  # Each copy tells the other when a cached list changes (PEER_ORIGINS, see
+  # src/server/cache-tags.ts). Logins are stored in the database, uploads on the
+  # shared volume, so it does not matter which copy answers a request.
   app:
+    <<: *app
     build:
       context: .
       target: runner
       args:
         NEXT_BUILD_CPUS: ${NEXT_BUILD_CPUS:-1}
-    image: bhalojob-app:latest
-    restart: unless-stopped
-    init: true
-    depends_on:
-      db:
-        condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
     environment:
-      NODE_ENV: production
-      PORT: "3000"
-      HOSTNAME: 0.0.0.0
-      DATABASE_URL: ${DATABASE_URL:?missing in the env file}
-      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:?missing in the env file}
-      ADMIN_PATH: ${ADMIN_PATH:?missing in the env file}
-      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-5}
-      STORAGE_DIR: /data/storage
-      # Same clock as the PCs the site was developed on. Dates in the database stay UTC.
-      TZ: Asia/Tokyo
-      # Heap ceiling for a 2 GB server shared with PostgreSQL.
-      NODE_OPTIONS: --max-old-space-size=512
-    volumes:
-      - uploads:/data/storage
-    expose:
-      - "3000"
-    healthcheck:
-      test:
-        - CMD
-        - node
-        - -e
-        - "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-      start_interval: 3s
-    mem_limit: 768m
-    stop_grace_period: 30s
-    logging: *logging
+      <<: *app-env
+      PEER_ORIGINS: http://app2:3000
+
+  app2:
+    <<: *app
+    # Same image as "app", which is the one that builds it.
+    pull_policy: never
+    environment:
+      <<: *app-env
+      PEER_ORIGINS: http://app:3000
 
   caddy:
     image: caddy:2
     restart: unless-stopped
     depends_on:
       - app
+      - app2
     ports:
       - "80:80"
       - "443:443"
     environment:
       DOMAIN: ${DOMAIN:?missing in the env file}
+      # Go's garbage collector works harder as memory nears this, well before
+      # the container limit below.
+      GOMEMLIMIT: 300MiB
     volumes:
       - ./deploy/aws/caddy:/etc/caddy:ro
       # Certificates live here. Losing this volume means asking Let's Encrypt again.
       - caddy-data:/data
       - caddy-config:/config
-    mem_limit: 192m
+    # At most about 8,000 connections at once. A flood beyond that waits in the
+    # operating system's queue instead of eating the server's memory.
+    ulimits:
+      nofile:
+        soft: 8192
+        hard: 8192
+    mem_limit: 384m
     logging: *logging
 
 # Fixed names, so the data does not depend on what this folder is called.

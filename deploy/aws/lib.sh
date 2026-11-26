@@ -15,6 +15,8 @@ ENV_FILE="$ENV_DIR/bhalojob.env"
 
 # Fixed names from docker-compose.yml and the Dockerfile.
 UPLOADS_VOLUME="bhalojob-uploads"
+# The site runs as two identical containers (see docker-compose.yml).
+APP_SERVICES="app app2"
 APP_IMAGE="bhalojob-app"
 APP_UID=1000 # the "node" user the app runs as
 APP_GID=1000
@@ -100,12 +102,12 @@ service_container() {
   printf '%s' "${ids%%$'\n'*}"
 }
 
-# wait_for_app [SECONDS]: waits until Docker reports the app container healthy,
-# which means /api/health answered 200 (the app is up and reaches the database).
-wait_for_app() {
-  local timeout="${1:-300}" waited=0 id state
+# wait_for_service SERVICE [SECONDS]: waits until Docker reports that container
+# healthy, which means /api/health answered 200 (it is up and reaches the database).
+wait_for_service() {
+  local service="$1" timeout="${2:-300}" waited=0 id state
   while [ "$waited" -lt "$timeout" ]; do
-    id="$(service_container app)"
+    id="$(service_container "$service")"
     if [ -n "$id" ]; then
       state="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$id" 2>/dev/null || true)"
       [ "$state" = "healthy" ] && return 0
@@ -116,11 +118,21 @@ wait_for_app() {
   return 1
 }
 
+# wait_for_app [SECONDS]: waits for every copy of the app.
+wait_for_app() {
+  local timeout="${1:-300}" service
+  for service in $APP_SERVICES; do
+    wait_for_service "$service" "$timeout" || return 1
+  done
+  return 0
+}
+
 # What to look at when the app does not come up. App logs hold no secrets.
 show_app_trouble() {
   dc ps --all || true
   printf '\n---- last lines of the app log ----\n'
-  dc logs --no-log-prefix --tail 40 app || true
+  # shellcheck disable=SC2086
+  dc logs --tail 40 $APP_SERVICES || true
   printf '\n---- last lines of the migrate log ----\n'
   dc logs --no-log-prefix --tail 20 migrate || true
 }

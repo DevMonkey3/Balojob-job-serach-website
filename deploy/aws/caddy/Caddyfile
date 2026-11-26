@@ -5,6 +5,10 @@
 # For that to work the domain's A record must point at this server and ports
 # 80 and 443 must be open.
 #
+# The app runs as two copies (app and app2). Caddy shares requests between
+# them, stops sending to a copy that is down or restarting, and never lets
+# more requests into a copy than it can serve (see "Overload" below).
+#
 # After editing this file:  sudo bash deploy/aws/update.sh --no-pull
 
 {
@@ -12,6 +16,36 @@
 	# security group and published in docker-compose.yml.
 	servers {
 		protocols h1 h2
+		# A connection that sends nothing useful is closed instead of being held
+		# open: 10 seconds to send the request headers, 60 seconds of idle time.
+		timeouts {
+			read_header 10s
+			idle 60s
+		}
+		max_header_size 16KB
+	}
+}
+
+# What both proxy blocks below have in common.
+(app_upstreams) {
+	# Compression happens once, here (zstd or gzip), not in the app as well.
+	header_up -Accept-Encoding
+
+	# Every 5 seconds each copy is asked /api/health. Two bad answers and it
+	# gets no visitors until it answers well again (during an update, a crash).
+	health_uri /api/health
+	health_interval 5s
+	health_timeout 4s
+	health_fails 2
+	health_passes 1
+
+	# A copy that fails 5 requests within 10 seconds is rested for 10 seconds.
+	fail_duration 10s
+	max_fails 5
+
+	transport http {
+		dial_timeout 3s
+		response_header_timeout 45s
 	}
 }
 
@@ -37,17 +71,77 @@
 		-X-Powered-By
 	}
 
+	# The two copies talk to each other on /api/internal/ inside the Docker
+	# network. From the internet that address does not exist.
+	@internal path /api/internal/*
+	handle @internal {
+		respond "Not found" 404
+	}
+
 	# Build files have a hash in their name and never change. Next.js already
 	# sends this header for them; this only fills it in if it is ever missing.
+	# They are cheap to serve, so they are never held back by the limit below.
 	@static path /_next/static/*
-	header @static ?Cache-Control "public, max-age=31536000, immutable"
+	handle @static {
+		header ?Cache-Control "public, max-age=31536000, immutable"
+		reverse_proxy app:3000 app2:3000 {
+			import app_upstreams
+			lb_policy round_robin
+			lb_try_duration 10s
+			lb_try_interval 250ms
+		}
+	}
 
-	reverse_proxy app:3000 {
-		# Compression happens once, here (zstd or gzip), not in the app as well.
-		header_up -Accept-Encoding
-		# While the app container restarts during an update, wait for it for up
-		# to 30 seconds instead of answering "502 Bad Gateway".
-		lb_try_duration 30s
-		lb_try_interval 500ms
+	# Pages and actions.
+	#
+	# Overload: one copy renders pages on one processor core. Past about 30
+	# pages at once it only gets slower for everybody and its memory fills up,
+	# which is how an unprotected server falls over. So a copy with 30 requests
+	# in progress takes no more. A new request goes to the other copy, or waits
+	# up to 8 seconds for a free place, and only then gets the short "busy"
+	# page below. The site slows down under a flood; it does not go down.
+	handle {
+		reverse_proxy app:3000 app2:3000 {
+			import app_upstreams
+			lb_policy least_conn
+			unhealthy_request_count 30
+			lb_try_duration 8s
+			lb_try_interval 250ms
+		}
+	}
+
+	# No copy could take the request (both full, or both restarting).
+	handle_errors {
+		@busy expression `{err.status_code} in [502, 503, 504]`
+		handle @busy {
+			header Retry-After "10"
+			header Cache-Control "no-store"
+			header Content-Type "text/html; charset=utf-8"
+			respond <<HTML
+				<!doctype html>
+				<html lang="ja">
+				<head>
+				<meta charset="utf-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1">
+				<meta http-equiv="refresh" content="10">
+				<title>ただいま混み合っています | Bhalojob</title>
+				<style>
+				body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fdf6ee;color:#1f1f1f;font-family:system-ui,-apple-system,"Segoe UI","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;text-align:center;padding:24px}
+				h1{font-size:22px;margin:0 0 12px}
+				p{margin:6px 0;color:#555;font-size:15px}
+				b{color:#c2410c}
+				</style>
+				</head>
+				<body>
+				<div>
+				<h1><b>Bhalojob</b></h1>
+				<h1>ただいまアクセスが集中しています</h1>
+				<p>10秒後に自動で再読み込みします。しばらくお待ちください。</p>
+				<p>The site is very busy right now. This page reloads by itself in 10 seconds.</p>
+				</div>
+				</body>
+				</html>
+				HTML {err.status_code}
+		}
 	}
 }

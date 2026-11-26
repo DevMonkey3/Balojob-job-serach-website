@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { refreshTag } from "@/server/cache-tags";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireStaffForAction } from "@/server/auth/staff";
@@ -109,7 +110,7 @@ export async function saveOptionsAction(_prev: ActionState, formData: FormData):
   if (!result) return { message: STALE };
   await audit(staff.id, "update", "selection_options", parentId ?? category, { category, parentId: rawParentId ?? null, ...result });
   // Dropdown labels are cached (src/server/admin/options.ts).
-  updateTag("options");
+  refreshTag("options");
 
   const q = new URLSearchParams({ category });
   if (rawParentId) q.set("parent", rawParentId);
@@ -139,7 +140,7 @@ export async function saveIndustriesAction(_prev: ActionState, formData: FormDat
   if (!result) return { message: STALE };
   await audit(staff.id, "update", "popular_industries", "all", result);
 
-  updateTag("popular-industries");
+  refreshTag("popular-industries");
   redirect(adminPath("/masters/industries?saved=1"));
 }
 
@@ -168,7 +169,7 @@ export async function deleteLoginAction(formData: FormData) {
   await deleteUser(id);
   await audit(staff.id, "delete", "users", id, { accountType: user.accountType });
   // A deleted company or school takes its postings off the site.
-  if (user.accountType === "corporate") updateTag("listings");
+  if (user.accountType === "corporate") refreshTag("listings");
   revalidatePath("/admin/masters/logins");
 }
 

@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { refreshTag } from "@/server/cache-tags";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Prisma, type CorporationKind } from "@/generated/prisma/client";
@@ -104,7 +105,7 @@ async function saveCorporation(kind: CorporationKind, formData: FormData): Promi
     throw e;
   }
 
-  updateTag("listings");
+  refreshTag("listings");
   redirect(adminPath(`${listPath(kind)}/${corporationId}?saved=${id ? "1" : "created"}`));
 }
 
@@ -115,7 +116,7 @@ async function removeCorporation(kind: CorporationKind, formData: FormData) {
   if (!id) return;
   if (!(await deleteCorporation(kind, id))) return;
   await audit(staff.id, "delete", "corporations", id);
-  updateTag("listings");
+  refreshTag("listings");
   // revalidatePath takes the route file path, which stays /admin/... whatever ADMIN_PATH is.
   revalidatePath(`/admin${listPath(kind)}`);
   const to = redirectTarget(formData);
