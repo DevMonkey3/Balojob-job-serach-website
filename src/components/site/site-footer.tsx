@@ -55,7 +55,7 @@ export function SiteFooter() {
             <nav key={col.title} aria-label={col.title} className="flex flex-col gap-2.5 text-sm">
               <span className="font-bold text-secondary-foreground">{col.title}</span>
               {col.links.map((l) => (
-                <Link key={l.href} href={l.href} className="text-foreground/70 transition-colors hover:text-primary hover:underline">
+                <Link key={l.href} href={l.href} prefetch={false} className="text-foreground/70 transition-colors hover:text-primary hover:underline">
                   {l.label}
                 </Link>
               ))}

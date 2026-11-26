@@ -114,6 +114,35 @@ setup_swap() {
   info "Swap is on."
 }
 
+# Network settings for a web server whose visitors are far away and often on
+# mobile connections.
+#   bbr + fq        Google's congestion control: keeps speed up on lines that
+#                   lose packets, where the default (cubic) slows right down.
+#   backlogs        room for a burst of new connections instead of dropping them.
+# Containers created afterwards inherit the congestion control from the host.
+tune_network() {
+  log "Network tuning"
+  if modprobe tcp_bbr 2>/dev/null; then
+    echo tcp_bbr >/etc/modules-load.d/bhalojob.conf
+    cat >/etc/sysctl.d/98-bhalojob-network.conf <<'EOF'
+net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr
+net.core.somaxconn = 8192
+net.ipv4.tcp_max_syn_backlog = 8192
+net.core.netdev_max_backlog = 5000
+EOF
+    info "BBR congestion control on."
+  else
+    cat >/etc/sysctl.d/98-bhalojob-network.conf <<'EOF'
+net.core.somaxconn = 8192
+net.ipv4.tcp_max_syn_backlog = 8192
+net.core.netdev_max_backlog = 5000
+EOF
+    info "BBR is not available on this kernel. The default congestion control stays."
+  fi
+  sysctl -q -p /etc/sysctl.d/98-bhalojob-network.conf || true
+}
+
 install_docker() {
   log "Docker"
   if docker compose version >/dev/null 2>&1; then
@@ -438,6 +467,7 @@ main() {
   choose_domain "$domain_arg"
   install_packages
   setup_swap
+  tune_network
   install_docker
   setup_firewall
   prepare_env_file

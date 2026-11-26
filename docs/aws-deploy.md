@@ -613,6 +613,7 @@ One server is enough to start. None of the following is built now. Each can be a
 | `deploy/aws/backup.sh` | Database dump + uploads archive, 14 days kept, optional S3 copy. |
 | `deploy/aws/restore.sh` | Restores a backup. |
 | `deploy/aws/lib.sh` | Shared helper functions of the four scripts. |
+| `deploy/aws/loadtest.sh` | Load test with browser-like connections (section 19). Read-only. |
 | `deploy/aws/env.example` | Every setting explained. The real file is `/etc/bhalojob/bhalojob.env`. |
 | `deploy/aws/caddy/Caddyfile` | HTTPS, redirects, compression, security headers, request size limit. |
 | `deploy/aws/docker/migrate.mjs` | What the `migrate` job runs: migrations, then the master data on an empty database. |
@@ -653,7 +654,7 @@ A fourth container, `cache` (nginx, `deploy/aws/cache/nginx.conf`), sits between
 - If the app is overloaded or restarting, the cache keeps handing out the last copy of a page (up to 10 minutes old) instead of an error.
 - `update.sh` and `restore.sh` empty the page cache, because its pages belong to the old version or the old data.
 
-Measured on the t3.small with the test tool running on the same server (so real figures are somewhat better): about 365 pages a second for visitors who are not signed in, against about 40 before. Pages for signed-in users are unchanged at about 35 to 40 a second; more of those needs more processor cores.
+Measured figures are in section 19. Pages for signed-in users do not use this cache and stay at about 35 to 40 a second; more of those needs more processor cores.
 
 Useful commands:
 
@@ -661,3 +662,41 @@ Useful commands:
 sudo docker compose logs -f cache                         # the cache's log (errors only)
 sudo docker compose exec cache wget -q -O- --post-data= http://127.0.0.1:8082/purge   # empty the page cache now
 ```
+
+## 19. Speed and capacity, measured
+
+Measured on the t3.small (2 processor cores, 2 GB) with `deploy/aws/loadtest.sh`. The test program ran on the same server and used about half of its processor, so the real limits are somewhat higher.
+
+| What | Result |
+|---|---|
+| One cached page on an open connection | 1 to 3 ms |
+| A new encrypted connection (TLS 1.3) | about 5 ms |
+| Pages per second, visitors not signed in | about 1,500 to 1,750 |
+| Pages per second, signed-in users (built fresh every time) | about 35 to 40 |
+| New encrypted connections per second | about 360 to 400 |
+| 2,000 visitors browsing (a page every 5 s each) | 16,000 of 16,000 pages served, 0 errors |
+| 4,000 visitors browsing | 30,372 of 30,372 served, 0 errors |
+| 5,000 visitors asking as fast as they can | 50,000 of 50,000 served, 0 errors, about 790 pages a second |
+| 5,000 first-time visitors in the same instant | 4,854 of 5,000 served (97%), the slowest waited 13 s |
+
+What limits the server, in the order you would meet them:
+
+1. **Signed-in users: processor.** Their pages are personal and built fresh, about 25 ms of one core each. About 35 to 40 pages a second, which is roughly 150 to 300 signed-in people clicking around at the same moment. More needs more cores (a c7i.large or a second server).
+2. **New connections: processor.** Setting up encryption costs processor time. About 400 brand-new visitors can arrive every second; a bigger burst waits a few seconds, it is not refused.
+3. **Open connections: Caddy's memory.** About 150 KB per connection in use. With the 768 MB allowed in `docker-compose.yml`, about 4,000 to 5,000 at once. Idle connections are closed after 60 seconds.
+4. **Network.** A t3.small is guaranteed roughly 128 Mbit/s over long periods. At 19 KB a page that is about 800 pages a second sustained, with short bursts above it.
+
+What was done to get there:
+
+- The page cache (section 18): a page is built once, not once per visitor.
+- Links that most visitors never click no longer pre-load their target (`prefetch={false}` on job cards, the footer and the chips of the top page). A page view made 17 background requests; now it makes 6 to 8.
+- Network settings (`tune_network` in `setup.sh`, `sysctls` of `caddy` in `docker-compose.yml`): BBR congestion control with fair queueing, which is faster on mobile and long-distance connections; full sending speed kept after a pause; larger queues for bursts of new connections.
+- Caddy's memory raised from 384 MB to 768 MB. At 384 MB the site stalled at about 4,000 open connections.
+
+Run the test yourself (it only reads public pages):
+
+```bash
+bash deploy/aws/loadtest.sh your-domain.example
+```
+
+Do not use `ab` for this. It opens a new encrypted connection for every request, which no browser does, and reports about a quarter of the real capacity.

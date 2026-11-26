@@ -42,7 +42,7 @@ export function ApplicationsList({ rows }: { rows: ApplicationView[] }) {
               <p className="flex flex-wrap items-center gap-2 font-semibold">
                 {a.category && <Badge variant="outline">{a.category}</Badge>}
                 {a.jobId ? (
-                  <Link href={`/jobs/${a.jobId}`} className="text-primary hover:underline">
+                  <Link href={`/jobs/${a.jobId}`} prefetch={false} className="text-primary hover:underline">
                     {title}
                   </Link>
                 ) : (

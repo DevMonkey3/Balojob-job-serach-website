@@ -280,6 +280,7 @@ async function PopularIndustries() {
         <Link
           key={i.ja}
           href={`/jobs?q=${encodeURIComponent(i.ja)}`}
+          prefetch={false}
           title={i.en || undefined}
           className="inline-flex h-7 items-center rounded-full border bg-background/80 px-3 text-xs transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
         >
@@ -380,6 +381,7 @@ async function Facets() {
               <li key={f.label} className="bg-card">
                 <Link
                   href={`/jobs?industry=${encodeURIComponent(f.label)}`}
+                  prefetch={false}
                   className="group flex items-center gap-3 px-5 py-3.5 text-sm transition-colors hover:bg-primary/5"
                 >
                   <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -401,6 +403,7 @@ async function Facets() {
             <li key={f.label}>
               <Link
                 href={`/jobs?loc=${encodeURIComponent(f.label)}`}
+                prefetch={false}
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
               >
                 <MapPinIcon className="size-3.5 text-primary" aria-hidden />

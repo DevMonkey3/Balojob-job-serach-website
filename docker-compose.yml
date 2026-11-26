@@ -192,7 +192,7 @@ services:
       DOMAIN: ${DOMAIN:?missing in the env file}
       # Go's garbage collector works harder as memory nears this, well before
       # the container limit below.
-      GOMEMLIMIT: 300MiB
+      GOMEMLIMIT: 640MiB
     volumes:
       - ./deploy/aws/caddy:/etc/caddy:ro
       # Certificates live here. Losing this volume means asking Let's Encrypt again.
@@ -204,7 +204,18 @@ services:
       nofile:
         soft: 8192
         hard: 8192
-    mem_limit: 384m
+    # Per-container network settings (the host-wide ones are in setup.sh).
+    sysctls:
+      # A visitor who paused to read keeps the full sending speed for the next
+      # click, instead of starting slowly again.
+      net.ipv4.tcp_slow_start_after_idle: 0
+      # Room for a burst of new connections.
+      net.ipv4.tcp_max_syn_backlog: 8192
+      net.core.somaxconn: 8192
+    # Every open visitor connection costs Caddy roughly 150 KB while it is in
+    # use. Measured: 384 MB was full at about 4,000 open connections and the
+    # site stalled; 768 MB leaves room for that many with memory to spare.
+    mem_limit: 768m
     logging: *logging
 
 # Fixed names, so the data does not depend on what this folder is called.

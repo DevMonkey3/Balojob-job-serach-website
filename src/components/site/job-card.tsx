@@ -13,6 +13,9 @@ import { yen } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Job, JobTrackKey } from "@/server/listings";
 
+// Links here do not pre-load their target (prefetch={false}): a list shows 20
+// cards, and pre-loading every job would multiply the requests per page view.
+//
 // One job in a list: the top page, 求人検索 and My Page all use it, so a job
 // looks the same everywhere. Candidates see the company's name and its
 // 許可・登録番号 only; contact details are never part of a Job.
@@ -88,7 +91,7 @@ export function JobCard({ job, action, compact = false, className }: Props) {
         <div className="flex flex-col gap-1">
           <h3 className={cn("font-bold leading-snug", compact ? "text-base" : "text-lg")}>
             {/* The whole card is the link; other controls sit above it (z-10). */}
-            <Link href={href} className="text-primary outline-none after:absolute after:inset-0 after:rounded-xl hover:underline focus-visible:after:ring-3 focus-visible:after:ring-ring/50">
+            <Link href={href} prefetch={false} className="text-primary outline-none after:absolute after:inset-0 after:rounded-xl hover:underline focus-visible:after:ring-3 focus-visible:after:ring-ring/50">
               {jobTitle(job)}
               {job.workName && job.jobType && <span className="font-medium text-foreground/70">（{job.workName}）</span>}
             </Link>
@@ -132,7 +135,7 @@ export function JobCard({ job, action, compact = false, className }: Props) {
           </p>
           <div className="relative z-10 flex items-center gap-2">
             {action}
-            <Link href={href} className={buttonVariants({ variant: "outline", size: "sm" })} tabIndex={-1} aria-hidden>
+            <Link href={href} prefetch={false} className={buttonVariants({ variant: "outline", size: "sm" })} tabIndex={-1} aria-hidden>
               詳細を見る
               <ChevronRightIcon />
             </Link>
