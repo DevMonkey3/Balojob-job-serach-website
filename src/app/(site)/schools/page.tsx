@@ -5,15 +5,25 @@ import { ArrowRightIcon, GraduationCapIcon, InfoIcon, MapPinIcon, UsersIcon, Wal
 import { Breadcrumb } from "@/components/site/breadcrumb";
 import { Tag } from "@/components/site/job-card";
 import { schoolCategoryLabels, yen } from "@/lib/format";
+import { pageMeta } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 import { getListings, type Recruitment } from "@/server/listings";
 
-export const metadata: Metadata = {
-  title: "学校を探す",
-  description: "留学生を募集している日本の大学・大学院、専門学校、日本語学校の学部・学科・コースの一覧です。",
-};
-
 type CategoryKey = keyof typeof schoolCategoryLabels;
+
+// "All schools" and one list per kind of school each have their own address.
+export async function generateMetadata({ searchParams }: PageProps<"/schools">): Promise<Metadata> {
+  const raw = (await searchParams).category;
+  const category = typeof raw === "string" && raw in schoolCategoryLabels ? (raw as CategoryKey) : "";
+  const label = category ? schoolCategoryLabels[category] : "";
+  return pageMeta({
+    title: label ? `${label}を探す` : "学校を探す",
+    description: label
+      ? `留学生を募集している日本の${label}の学部・学科・コースの一覧です。`
+      : "留学生を募集している日本の大学・大学院、専門学校、日本語学校の学部・学科・コースの一覧です。",
+    path: category ? `/schools?category=${category}` : "/schools",
+  });
+}
 
 const tabs: { key: CategoryKey | ""; label: string }[] = [
   { key: "", label: "すべて" },

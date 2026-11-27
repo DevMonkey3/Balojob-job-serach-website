@@ -7,15 +7,37 @@ import { JobCard } from "@/components/site/job-card";
 import { JobFilterForm, minSalaryOptions, type SearchValues } from "@/components/site/job-search-form";
 import { buttonVariants } from "@/components/ui/button";
 import { jobTrackLabels } from "@/lib/format";
+import { pageMeta } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 import { getOptionLabels } from "@/server/admin/options";
 import { JOBS_PER_PAGE, getJobFacets, searchJobs, type JobFilters, type JobTrackKey } from "@/server/listings";
 
-export const metadata: Metadata = {
-  title: "求人検索",
-  description:
-    "技人国・特定技能・育成就労の求人を、在留資格・業種・勤務地・月給から検索できます。応募はバロジョブのスタッフが企業におつなぎします。",
-};
+// One address per list. The lists worth finding in a search engine are "all
+// jobs" and one per 在留資格 (/jobs?track=ssw), page by page. Any other filter
+// (業種, 勤務地, free words …) is a view of those: it points back to the plain
+// list as its canonical address and asks not to be indexed, so thousands of
+// filter combinations do not compete with each other.
+export async function generateMetadata({ searchParams }: PageProps<"/jobs">): Promise<Metadata> {
+  const { values, page } = parse(await searchParams);
+  const label = values.track ? jobTrackLabels[values.track as JobTrackKey] : "";
+  const filtered = Boolean(values.industry || values.employment || values.loc || values.q || values.min);
+
+  const params = new URLSearchParams();
+  if (values.track) params.set("track", values.track);
+  if (page > 1 && !filtered) params.set("page", String(page));
+  const query = params.toString();
+
+  return {
+    ...pageMeta({
+      title: (label ? `${label}の求人` : "求人検索") + (page > 1 && !filtered ? `（${page}ページ目）` : ""),
+      description: label
+        ? `${label}の求人一覧。業種・勤務地・月給から検索できます。応募はバロジョブのスタッフが企業におつなぎします。`
+        : "技人国・特定技能・育成就労の求人を、在留資格・業種・勤務地・月給から検索できます。応募はバロジョブのスタッフが企業におつなぎします。",
+      path: query ? `/jobs?${query}` : "/jobs",
+    }),
+    ...(filtered ? { robots: { index: false, follow: true } } : {}),
+  };
+}
 
 // 求人検索: filters on the left, results on the right. Everything is in the
 // URL (?track=ssw&industry=建設&page=2), so a search can be shared.

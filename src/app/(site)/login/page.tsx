@@ -1,10 +1,11 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 import { getMember, memberHome, safeReturnPath } from "@/server/auth/member";
 
-export const metadata: Metadata = { title: "ログイン" };
+export const metadata: Metadata = pageMeta({ title: "ログイン", path: "/login" });
 
 // 会員ログイン for candidates and companies (?as=employer picks the company tab).
 export default function LoginPage({ searchParams }: PageProps<"/login">) {

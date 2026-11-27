@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
   // Self-contained server for a small VPS or container: node .next/standalone/server.js
   output: "standalone",
   poweredByHeader: false,
+  // Titles, descriptions and share-preview tags always go in <head>, for every
+  // visitor. By default Next.js sends them late (in the page body) to ordinary
+  // browsers and in <head> only to crawlers it recognises. The page cache in
+  // front of the app keeps ONE copy of a page for everybody, so the copy a
+  // browser fetched would be handed to LINE or Facebook with no preview tags.
+  htmlLimitedBots: /.*/,
   // The standalone server gets only what it runs: no uploads, docs, demo data or sources.
   outputFileTracingExcludes: {
     "*": [

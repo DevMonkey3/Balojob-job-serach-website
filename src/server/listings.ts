@@ -45,6 +45,9 @@ export type Job = {
   salary: number | null;
   /** YYYY/MM/DD in Japan time. */
   postedOn: string;
+  /** When it was posted and last changed, as ISO 8601 (structured data, sitemap). */
+  postedAt: string;
+  updatedAt: string;
   /** Posted in the last 14 days. */
   isNew: boolean;
 };
@@ -110,6 +113,7 @@ const jobSelect = {
   holidays: true,
   monthlySalary: true,
   createdAt: true,
+  updatedAt: true,
   corporation: { select: { memberNo: true, name: true, licenseNo: true } },
 } satisfies Prisma.JobPostingSelect;
 
@@ -137,6 +141,8 @@ function toJob(j: JobRow): Job {
     holidays: j.holidays ?? "",
     salary: j.monthlySalary,
     postedOn: dateFormat.format(j.createdAt),
+    postedAt: j.createdAt.toISOString(),
+    updatedAt: j.updatedAt.toISOString(),
     isNew: Date.now() - j.createdAt.getTime() < NEW_DAYS * 24 * 60 * 60 * 1000,
   };
 }

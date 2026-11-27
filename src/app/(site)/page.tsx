@@ -25,9 +25,12 @@ import {
   WrenchIcon,
 } from "lucide-react";
 import { JobCard } from "@/components/site/job-card";
+import { SiteJsonLd } from "@/components/site/json-ld";
 import { JobSearchBar } from "@/components/site/job-search-form";
 import { RegisterChoice } from "@/components/site/register-choice";
 import { SectionTitle } from "@/components/site/section-title";
+import { pageMeta } from "@/lib/seo";
+import { SITE_DESCRIPTION, SITE_TITLE } from "@/lib/site";
 import { buttonVariants } from "@/components/ui/button";
 import { jobTrackLabels, schoolCategoryLabels } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -69,9 +72,12 @@ const industryIcons: Record<string, React.ComponentType<{ className?: string }>>
 
 // Database reads happen per request (after connection()), so `next build`
 // doesn't need the database. The numbers themselves come from a shared cache.
+export const metadata = pageMeta({ path: "/", shareTitle: SITE_TITLE, description: SITE_DESCRIPTION });
+
 export default function HomePage() {
   return (
     <>
+      <SiteJsonLd />
       <section className="relative overflow-hidden border-b bg-gradient-to-br from-brand-orange/15 via-background to-brand-red/10">
         <div
           className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(circle_at_1px_1px,color-mix(in_oklch,var(--brand-orange),transparent_82%)_1px,transparent_0)] [background-size:22px_22px] [mask-image:linear-gradient(to_bottom,black,transparent_85%)]"

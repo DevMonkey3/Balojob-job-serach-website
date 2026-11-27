@@ -1,10 +1,11 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import { AccountForm } from "@/components/auth/account-form";
 import { getMember, memberHome } from "@/server/auth/member";
 
-export const metadata: Metadata = { title: "法人会員登録" };
+export const metadata: Metadata = pageMeta({ title: "法人会員登録", path: "/register/corporate" });
 
 export default function CorporateRegisterPage() {
   return (

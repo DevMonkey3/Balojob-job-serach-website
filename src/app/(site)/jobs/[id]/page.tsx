@@ -15,7 +15,9 @@ import {
 import { ApplyButton } from "@/components/mypage/apply-button";
 import { Breadcrumb } from "@/components/site/breadcrumb";
 import { NewBadge, Tag, TrackBadge, featureTags, jobTitle, salaryText } from "@/components/site/job-card";
+import { BreadcrumbJsonLd, JobPostingJsonLd } from "@/components/site/json-ld";
 import { buttonVariants } from "@/components/ui/button";
+import { pageMeta } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 import { getMember } from "@/server/auth/member";
 import { getPublicJob, type JobDetail } from "@/server/listings";
@@ -26,10 +28,11 @@ type Props = PageProps<"/jobs/[id]">;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const job = await getPublicJob((await params).id);
   if (!job) return { title: "求人が見つかりません", robots: { index: false } };
-  return {
+  return pageMeta({
     title: `${jobTitle(job)}｜${job.company}`,
     description: [job.category, job.industry, job.location, salaryText(job.salary), job.description].filter(Boolean).join("／").slice(0, 160),
-  };
+    path: `/jobs/${job.id}`,
+  });
 }
 
 // One job. Anyone can read it; applying needs a candidate login. The company
@@ -73,6 +76,14 @@ async function JobView({ params }: { params: Props["params"] }) {
   return (
     <>
       <Breadcrumb items={[{ label: "求人検索", href: "/jobs" }, { label: title }]} />
+      {/* The same facts for search engines (Google for Jobs reads JobPosting). */}
+      <JobPostingJsonLd job={job} />
+      <BreadcrumbJsonLd
+        items={[
+          { label: "求人検索", path: "/jobs" },
+          { label: title, path: `/jobs/${job.id}` },
+        ]}
+      />
 
       <div className="grid items-start gap-6 lg:grid-cols-[1fr_340px]">
         <div className="flex min-w-0 flex-col gap-6">

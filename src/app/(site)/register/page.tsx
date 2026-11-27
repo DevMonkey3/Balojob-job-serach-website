@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import { RegisterChoice } from "@/components/site/register-choice";
 
-export const metadata: Metadata = { title: "会員登録" };
+export const metadata: Metadata = pageMeta({ title: "会員登録", path: "/register" });
 
 export default function RegisterPage() {
   return (

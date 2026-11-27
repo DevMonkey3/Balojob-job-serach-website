@@ -36,7 +36,12 @@ ARG NEXT_BUILD_CPUS=1
 # Heap limit for the build only. Node sizes its default from the machine's RAM,
 # which is too small on a 2 GB server; with this it can spill into swap instead of failing.
 ARG BUILD_HEAP_MB=1536
-ENV NEXT_BUILD_CPUS=${NEXT_BUILD_CPUS}
+# The site's public address (https://<DOMAIN>). Pages that are prepared during
+# the build carry it in their canonical link and share-preview tags, so it has
+# to be known here; docker-compose.yml passes it. Changing the domain rebuilds.
+ARG SITE_URL=
+ENV NEXT_BUILD_CPUS=${NEXT_BUILD_CPUS} \
+    SITE_URL=${SITE_URL}
 COPY . .
 # `prisma generate` again so the client always matches the schema that was just copied.
 # `mkdir -p public` because the runner stage copies that folder and the project may not have one.

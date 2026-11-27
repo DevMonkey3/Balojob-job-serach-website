@@ -65,6 +65,9 @@ x-app-env: &app-env
   TZ: Asia/Tokyo
   # Heap ceiling per copy, below the container's memory limit.
   NODE_OPTIONS: --max-old-space-size=400
+  # The site's public address: canonical links, robots.txt, the sitemap and
+  # structured data are written with it (src/lib/site.ts).
+  SITE_URL: https://${DOMAIN:?missing in the env file}
   # Where the app tells the page cache to forget its pages (src/server/cache-tags.ts).
   PAGE_CACHE_PURGE_URL: http://cache:8082/purge
 
@@ -134,6 +137,8 @@ services:
       target: runner
       args:
         NEXT_BUILD_CPUS: ${NEXT_BUILD_CPUS:-1}
+        # Same value as SITE_URL below (see src/lib/site.ts).
+        SITE_URL: https://${DOMAIN:?missing in the env file}
     environment:
       <<: *app-env
       PEER_ORIGINS: http://app2:3000

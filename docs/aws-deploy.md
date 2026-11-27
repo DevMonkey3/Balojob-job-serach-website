@@ -614,6 +614,7 @@ One server is enough to start. None of the following is built now. Each can be a
 | `deploy/aws/restore.sh` | Restores a backup. |
 | `deploy/aws/lib.sh` | Shared helper functions of the four scripts. |
 | `deploy/aws/loadtest.sh` | Load test with browser-like connections (section 19). Read-only. |
+| `src/lib/site.ts`, `src/lib/seo.ts`, `src/app/robots.ts`, `src/app/sitemap.ts`, `src/components/site/json-ld.tsx` | Search engines and share previews (section 20). |
 | `deploy/aws/env.example` | Every setting explained. The real file is `/etc/bhalojob/bhalojob.env`. |
 | `deploy/aws/caddy/Caddyfile` | HTTPS, redirects, compression, security headers, request size limit. |
 | `deploy/aws/docker/migrate.mjs` | What the `migrate` job runs: migrations, then the master data on an empty database. |
@@ -700,3 +701,32 @@ bash deploy/aws/loadtest.sh your-domain.example
 ```
 
 Do not use `ab` for this. It opens a new encrypted connection for every request, which no browser does, and reports about a quarter of the real capacity.
+
+## 20. Search engines and share previews (SEO)
+
+The site tells search engines and chat apps about itself without any setting. Everything is written with the site's public address, `https://` + `DOMAIN` from the env file (`SITE_URL` in `docker-compose.yml`, read by `src/lib/site.ts`).
+
+| What | Where | For |
+|---|---|---|
+| `/robots.txt` | `src/app/robots.ts` | Which pages may be crawled, and where the sitemap is. The staff console is not named in it on purpose: the file is public. |
+| `/sitemap.xml` | `src/app/sitemap.ts` | Every public page and every job that is listed right now. A job appears when staff approve it and disappears when it is closed. |
+| JobPosting structured data | `src/components/site/json-ld.tsx`, on each job's page | Makes a job eligible for the Google for Jobs box. Title, description, date, company name, place, salary and employment type, exactly as shown on the page. |
+| Organization, WebSite, BreadcrumbList structured data | same file | The site's name and the trail above a job in search results. |
+| Canonical address | `pageMeta()` in `src/lib/seo.ts` | One address per page. `/jobs` and `/jobs?track=…` (page by page) are their own pages; any other filter points back to the plain list and says `noindex`. |
+| Share preview (Open Graph, X card) | `pageMeta()`, `src/app/opengraph-image.png` | Title, text and image when a link is pasted into LINE, Facebook, Slack or X. |
+
+**A temporary address is kept out of Google.** While `DOMAIN` is an `sslip.io` / `nip.io` name, every page says `noindex` and `robots.txt` names no sitemap (`siteIndexable()` in `src/lib/site.ts`). Otherwise Google would list an address that stops working the day the real domain is connected. With a real domain the site is indexable by itself.
+
+**When the real domain is connected** (`sudo bash deploy/aws/setup.sh bhalojob.com`): the address is part of the build, so setup builds the app again by itself. After that:
+
+1. Open `https://bhalojob.com/robots.txt`. The last line must be `Sitemap: https://bhalojob.com/sitemap.xml`.
+2. In [Google Search Console](https://search.google.com/search-console) add the domain, prove you own it (a DNS TXT record), and submit `https://bhalojob.com/sitemap.xml` under Sitemaps.
+3. Paste the address of one approved job into the [Rich Results Test](https://search.google.com/test/rich-results). It must find one "Job posting" with no errors.
+4. Do the same in Bing Webmaster Tools if you want Bing and Yahoo! JAPAN's partner results.
+
+Good to know:
+
+- Titles and preview tags are always in `<head>` (`htmlLimitedBots` in `next.config.ts`). The page cache keeps one copy of a page for everybody, so the copy must be complete for apps that do not run JavaScript.
+- A job that is closed or not approved has no page. The address answers with the "not found" page and `noindex`, and carries no JobPosting data, which is what Google asks for. (The HTTP status is 200, not 404: the page starts streaming before the job is looked up.)
+- Google for Jobs wants complete postings. A job with no 仕事内容 and no salary is still valid but is less likely to be shown; ask companies to fill them in.
+- Ranking itself takes weeks to months on a new domain and depends on other sites linking to it. This section only makes the site eligible and readable.
